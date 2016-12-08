@@ -69,24 +69,7 @@ namespace SearchEngine
 
                     FindBegginingOfText(file, ref fileIndexer);
 
-                    while (!ReachedTODocumentEnd(file, fileIndexer))
-                    {
-                        fileIndexer++;
-                        MoveIndexToNextToken(ref fileIndexer, file);
-                        string token = file[fileIndexer];
-
-                        token = NormalizeToken(token);
-
-                        if (!IsAStopWord(token) && !EliminatedByCustomedRules(token))
-                        {
-
-                            bool termRepresentANumber = ActivateDerivationLaws(ref token, file, ref fileIndexer);
-                            if (useStemming & !termRepresentANumber)
-                                token = ActivateStemming(token);
-                            documentLength++;
-                            UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
-                        }
-                    }
+                    IterateTokens(ref fileIndexer, file, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     documentsData[docNo] = new DocumentData(docNo, mostFrequentTerm, frquenciesOfMostFrequentTerm, termFrequencies.Keys.Count, docLanguage, documentLength);
                     UpdatePostingFile(termFrequencies, postingFile, docNo);
 
@@ -97,6 +80,30 @@ namespace SearchEngine
             termsToIndex = postingFile.Values.ToArray<TermFrequency>();
             DocsDats = documentsData.Values.ToArray<DocumentData>();
 
+        }
+
+
+        private static void IterateTokens(ref int fileIndexer, string[] file, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
+        {
+
+            while (!ReachedTODocumentEnd(file, fileIndexer))
+            {
+                fileIndexer++;
+                MoveIndexToNextToken(ref fileIndexer, file);
+                string token = file[fileIndexer];
+
+                token = NormalizeToken(token);
+
+                if (!IsAStopWord(token) && !EliminatedByCustomedRules(token))
+                {
+
+                    bool termRepresentANumber = ActivateDerivationLaws(ref token, file, ref fileIndexer);
+                    if (useStemming & !termRepresentANumber)
+                        token = ActivateStemming(token);
+                    documentLength++;
+                    UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                }
+            }
         }
 
         private static void UpdatePostingFile(Dictionary<string, int> termFrequencies, Dictionary<string, TermFrequency> postingFile,string docNumber)
