@@ -46,7 +46,7 @@ namespace SearchEngine
         public static void Parse(string[] filePathes, bool useStemming,out TermFrequency[] termsToIndex,out DocumentData[] DocsDats)
         {
 
-
+            string s = "";
             Dictionary<string, TermFrequency> postingFile = new Dictionary<string, TermFrequency>();
             Dictionary<string, DocumentData> documentsData = new Dictionary<string, DocumentData>();
             int numOfFiles = filePathes.Length;
