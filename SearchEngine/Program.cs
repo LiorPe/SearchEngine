@@ -1,0 +1,55 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace SearchEngine
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int[] PostingFilesAmount = new int[] { 2 };
+            int[] ParserFactor = new int[] { 2 };
+
+
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            LoadIndexFromMemory();
+
+
+            stopWatch.Stop();
+
+            // Get the elapsed time as a TimeSpan value.
+            TimeSpan ts = stopWatch.Elapsed;
+            // Format and display the TimeSpan value.
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            string result = string.Format("Duration: {0}",elapsedTime);
+            Console.WriteLine(result);
+
+            Console.ReadKey();
+
+
+
+        }
+            public static void CreeateIndexForTheFirstTime()
+        {
+            Indexer indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles");
+            indexer.IndexCorpus(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt");
+        }
+
+        public static void LoadIndexFromMemory()
+        {
+            Indexer indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles");
+            indexer.LoadMainDictionaryFromMemory();
+         }
+    }
+}
