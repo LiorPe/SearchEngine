@@ -19,7 +19,7 @@ namespace SearchEngine
         // Saves what is the last row that was written in each posting file (so you can know what is the next availabe row infile)
         Dictionary<int, int> lastRowWrittenInFile;
         //How many different posting files exist.
-        public int NumOfPostingFiles{get;set; }
+        public static int NumOfPostingFiles { get; set; }
         public int ParserFactor { get; set; }
         //Path for directory in which postinf files will be saved.
         string _destPostingFiles;
@@ -36,7 +36,7 @@ namespace SearchEngine
         public Indexer(string destPostingFiles, string mainDictionaryFilePath)
         {
             NumOfPostingFiles = 2;
-            ParserFactor = 2;
+            ParserFactor = 4;
             _destPostingFiles = destPostingFiles;
             InitLastRowWrittenInFile();
             InitMainDictionary();
@@ -46,7 +46,7 @@ namespace SearchEngine
             _mainDictionaryFilePath = mainDictionaryFilePath;
         }
 
-        public void IndexCorpus(string corpusDirectoryPath, string stopWordsFilePath)
+        public void IndexCorpus(string corpusDirectoryPath, string stopWordsFilePath, bool useStemming)
         {
             string[] allFileEntries = Directory.GetFiles(corpusDirectoryPath);
             int amountOfFiles = allFileEntries.Length;
@@ -75,13 +75,12 @@ namespace SearchEngine
             Parser.InitStopWords(stopWordsFilePath);
             for (int i = 0; i < size; i++)
             {
-                Parser.Parse(docFilesNames[i], false, out termsFrequencies, out docsData);
+                Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, out docsData);
                 IndexParsedTerms(termsFrequencies, docsData);
-                Console.WriteLine("Indexed {0}\\{1} ", i, size);
+                Console.WriteLine("{0}/{1}", i, size);
             }
             MergeSplittedDictionaries();
             SaveMainDictionaryToMemory();
-            Console.WriteLine("Dictionaries wew mereged!");
         }
 
         //init dictionary whichmaps the posting file and the last availabe row
