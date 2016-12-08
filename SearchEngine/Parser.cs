@@ -17,8 +17,8 @@ namespace SearchEngine
         static readonly string BeginningOfTextTag = "<TEXT>";
         static readonly string EndOfTextTag = "</TEXT>";
         public static HashSet<string> StopWords= null;
-        private readonly static char[] SuffixToRemove = { '.', ',', '!', '?', ')', '\'', '"', ';' };
-        private readonly static char[] prefixToRemove = { '\'', '"', '(' };
+        private readonly static char[] SuffixToRemove = { '~', '`', ';', '!', '@', '#', '$', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/','<','>',',' };
+        private readonly static char[] prefixToRemove = { '~', '`', ';', '!', '@', '#', '$', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',' };
         private static readonly Dictionary<string, string> monthes = new Dictionary<string, string>
         {
             {"january","01" },
@@ -68,7 +68,6 @@ namespace SearchEngine
 
 
                     FindBegginingOfText(file, ref fileIndexer);
-
                     IterateTokens(ref fileIndexer, file, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     documentsData[docNo] = new DocumentData(docNo, mostFrequentTerm, frquenciesOfMostFrequentTerm, termFrequencies.Keys.Count, docLanguage, documentLength);
                     UpdatePostingFile(termFrequencies, postingFile, docNo);
@@ -86,24 +85,25 @@ namespace SearchEngine
         private static void IterateTokens(ref int fileIndexer, string[] file, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
         {
 
-            while (!ReachedTODocumentEnd(file, fileIndexer))
-            {
-                fileIndexer++;
-                MoveIndexToNextToken(ref fileIndexer, file);
+
+            do
+            { 
                 string token = file[fileIndexer];
-
                 token = NormalizeToken(token);
-
                 if (!IsAStopWord(token) && !EliminatedByCustomedRules(token))
                 {
-
-                    bool termRepresentANumber = ActivateDerivationLaws(ref token, file, ref fileIndexer);
-                    if (useStemming & !termRepresentANumber)
+                    bool tokenRecursivelyParsed = false;
+                    bool countFrequenciesSeperately = false;
+                    bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately);
+                    if (useStemming & !tokenCanBeStemmed)
                         token = ActivateStemming(token);
                     documentLength++;
                     UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                 }
-            }
+                fileIndexer++;
+                MoveIndexToNextToken(ref fileIndexer, file);
+
+            } while (!ReachedTODocumentEnd(file, fileIndexer));
         }
 
         private static void UpdatePostingFile(Dictionary<string, int> termFrequencies, Dictionary<string, TermFrequency> postingFile,string docNumber)
@@ -220,6 +220,7 @@ namespace SearchEngine
         private static void FindBegginingOfText(string[] file, ref int fileIndexer)
         {
             for (; file[fileIndexer] != BeginningOfTextTag; fileIndexer++) ;
+            fileIndexer++;
         }
 
         /// <summary>
@@ -272,18 +273,39 @@ namespace SearchEngine
         }
 
 
-        private static bool ActivateDerivationLaws(ref string token, string[] file, ref int fileIndexer)
+        private static bool ActivateDerivationLaws(ref string token, string[] file, ref int fileIndexer,ref bool tokenRecursivelyParsed, ref bool countFrequenciesSeperately)
         {
-            if (Char.IsDigit(token[0]))
-            {
-                ActivateDerivationLawsForNumbers(token, file, ref fileIndexer);
-                return true;
-            }
-            else
+            string splittedTokens;
+            double numericValue;
+            string suffix;
+            //if token cnsists only from words
+            if (token.All(Char.IsLetter))
             {
                 ActivateDerivationLawsForWords(token, file, ref fileIndexer);
-                return false;
+                return true;
+
             }
+
+            // if a number
+            else if (ExtractNumericValueAndSuffix(token, out numericValue, out suffix))
+            {
+                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix);
+            }
+
+            // if two token connected by - (word-number,word-word,number-number,number word)
+
+            // if 3 words connected by - (word-word-word)
+
+            // if token can is splitted to sub-tokens by signs (lior%ido...something)
+
+
+            // if  initials (u.s.a -> usa)
+
+            // if has possesive s in the end -> (lior`s apple -> lior-apple)
+
+            // if begins with number and ends with letters 
+
+            return false;
         }
 
 
@@ -293,16 +315,14 @@ namespace SearchEngine
 
         private static void ActivateDerivationLawsForWords(string token, string[] file, ref int fileIndexer)
         {
-            // if an expression - leave it like this
-            if (token.Contains("-"))
-            {
-                return;
-            }
+
             //if begins with $ - move the $ to the end of word, and activate rules for numbers
-            if (token.Substring(0, 1) == "$")
+            double numericValue;
+            string suffix;
+            if (token[0] == '$' && ExtractNumericValueAndSuffix(token.Substring(1, token.Length - 1),out numericValue,out suffix))
             {
                 token = token.Substring(1, token.Length - 1) + "$";
-                ActivateDerivationLawsForNumbers(token, file, ref fileIndexer);
+                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer,numericValue,suffix);
             }
             token = NormalizeToken(token);
             // if it`s a date
@@ -334,22 +354,11 @@ namespace SearchEngine
         }
         #endregion
         #region Derivation Laws For Numbers
-        private static void ActivateDerivationLawsForNumbers(string token, string[] file, ref int fileIndexer)
+        private static void ActivateDerivationLawsForNumbers(ref string token, string[] file, ref int fileIndexer,double numericValue,string suffix)
         {
-
-            // if token is expression with hyphen
-            if (token.Contains("-"))
-            {
-                return;
-            }
             double numericalValue;
-            // if this is not an expression
-            if (!token.Contains("/"))
-            {
-                //Check for suffix
-                string suffix = ExtractSuffix(ref token);
                 numericalValue = ExtractNumber(ref token, suffix, file, ref fileIndexer);
-
+            
 
                 //if represents a date
                 if (numericalValue <= 31 && monthes.ContainsKey(file[fileIndexer + 1]))
@@ -383,7 +392,7 @@ namespace SearchEngine
                     fileIndexer += 2;
                 }
 
-            }
+            
 
         }
 
@@ -440,48 +449,68 @@ namespace SearchEngine
             return numericalValue;
         }
 
-        private static string ExtractSuffix(ref string token)
+        private static bool ExtractNumericValueAndSuffix(string token,out double numericValue, out string suffix)
         {
+
             //remove th from the end of number if exists 
-            if (token.Length >= 2)
+            if (Double.TryParse(token,out numericValue))
+            {
+                suffix = String.Empty;
+                return true;
+            }
+            string[] splittedNumber = token.Split('/');
+            double mone;
+            double mechane;
+            if (splittedNumber.Length==2 && Double.TryParse(splittedNumber[0], out mone) && Double.TryParse(splittedNumber[1], out mechane))
+            {
+                suffix = String.Empty;
+                numericValue = mone / mechane;
+                return true;
+            }
+            else if (token.Length >= 2 && Double.TryParse(token.Substring(0, token.Length - 2),out numericValue))
             {
                 if (token.Substring(token.Length - 2).ToLower() == "th")
                 {
-                    token = token.Substring(0, token.Length - 2);
-                    return "th";
+                    suffix= "th";
+                    return true;
                 }
                 if (token.Substring(token.Length - 2).ToLower() == "st")
                 {
-                    token = token.Substring(0, token.Length - 2);
-                    return "st";
+                    suffix = "st";
+                    return true;
+
                 }
                 if (token.Substring(token.Length - 2).ToLower() == "bm")
                 {
-                    token = token.Substring(0, token.Length - 2);
-                    return "bn";
+                    suffix= "bn";
+                    return true;
+
                 }
             }
-            if (token.Length > 1)
+            else if (token.Length > 1 & Double.TryParse(token.Substring(0, token.Length - 1), out numericValue))
             {
                 if (token.Substring(token.Length - 1) == "%")
                 {
-                    token = token.Substring(0, token.Length - 1);
-                    return "%";
+                    suffix= "%";
+                    return true;
+
                 }
                 if (token.Substring(token.Length - 1) == "$")
                 {
-                    token = token.Substring(0, token.Length - 1);
-                    return "$";
+                    suffix= "$";
+                    return true;
+
                 }
                 if (token.Substring(token.Length - 1) == "m")
                 {
-                    token = token.Substring(0, token.Length - 1);
-                    return "m";
+                    suffix= "m";
+                    return true;
+
                 }
             }
 
-
-            return "";
+            suffix = string.Empty;
+            return false;
         }
         #endregion
     }
