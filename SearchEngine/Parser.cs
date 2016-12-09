@@ -17,7 +17,7 @@ namespace SearchEngine
         static readonly string BeginningOfTextTag = "<TEXT>";
         static readonly string EndOfTextTag = "</TEXT>";
         public static HashSet<string> StopWords= null;
-        private readonly static char[] SuffixToRemove = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/','<','>',',', '-' };
+        private readonly static char[] SuffixToRemove = { '-','~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/','<','>',',', '-' };
         private readonly static char[] prefixToRemove = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',' };
         private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',','-','$' };
         private static readonly Dictionary<string, string> monthes = new Dictionary<string, string>
@@ -90,16 +90,19 @@ namespace SearchEngine
             do
             { 
                 string token = file[fileIndexer];
-                token = NormalizeToken(token);
                 if (!IsAStopWord(token) && !EliminatedByCustomedRules(token))
                 {
                     bool tokenRecursivelyParsed = false;
                     bool countFrequenciesSeperately = false;
                     bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
-                    if (useStemming & !tokenCanBeStemmed)
+                    if (useStemming && !tokenCanBeStemmed &&tokenRecursivelyParsed)
                         token = ActivateStemming(token);
-                    documentLength++;
-                    UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    if (!tokenRecursivelyParsed)
+                    {
+                        documentLength++;
+                        UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    }
+                    //Console.WriteLine(token);
                 }
                 fileIndexer++;
                 MoveIndexToNextToken(ref fileIndexer, file);
@@ -135,7 +138,7 @@ namespace SearchEngine
 
         private static void MoveIndexToNextToken(ref int fileIndexer, string[] file)
         {
-            while (file[fileIndexer] == "")
+            while (fileIndexer < file.Length && file[fileIndexer] == "")
                 fileIndexer++;
         }
 
@@ -232,7 +235,7 @@ namespace SearchEngine
         /// <returns></returns>
         private static bool ReachedTODocumentEnd(string[] file, int fileIndexer)
         {
-            return (file[fileIndexer] == EndOfTextTag);
+            return (fileIndexer>=file.Length || file[fileIndexer] == EndOfTextTag);
         }
 
 
@@ -279,20 +282,27 @@ namespace SearchEngine
             string[] splittedToken;
             double numericValue;
             string suffix;
+                        // if a number
+             if (ExtractNumericValueAndSuffix(token, out numericValue, out suffix))
+            {
+                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix);
+                return false;
+            }
+            token = NormalizeToken(token);
+            if (token == string.Empty)
+            {
+                tokenRecursivelyParsed = true;
+                return false;
+            }
             //if token cnsists only from words
-            if (token.All(Char.IsLetter))
+            if(token.All(Char.IsLetter))
             {
                 ActivateDerivationLawsForWords(token, file, ref fileIndexer);
                 return true;
 
             }
 
-            // if a number
-            else if (ExtractNumericValueAndSuffix(token, out numericValue, out suffix))
-            {
-                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix);
-                return false;
-            }
+
 
             // if two token connected by - (word-number,word-word,number-number,number word)
             else if ((splittedToken = token.Split('-')).Length == 2 && (splittedToken[0].All(Char.IsLetter) || Double.TryParse(splittedToken[0], out numericValue)) && (splittedToken[1].All(Char.IsLetter) || Double.TryParse(splittedToken[1], out numericValue)))
@@ -392,6 +402,10 @@ namespace SearchEngine
             //if begins with $ - move the $ to the end of word, and activate rules for numbers
             double numericValue;
             string suffix;
+            if (token[0] == '$')
+            {
+                token = token;
+            }
             if (token[0] == '$' && ExtractNumericValueAndSuffix(token.Substring(1, token.Length - 1),out numericValue,out suffix))
             {
                 token = token.Substring(1, token.Length - 1) + "$";

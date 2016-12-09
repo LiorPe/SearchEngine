@@ -19,7 +19,8 @@ namespace ConsoleTest
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
-                LoadIndexFromMemory();
+                 CreeateIndexForTheFirstTime();
+                //LoadIndexFromMemory();
 
 
                 stopWatch.Stop();
