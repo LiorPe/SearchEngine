@@ -291,13 +291,13 @@ namespace SearchEngine
             //if token cnsists only from words
             if (token.All(Char.IsLetter))
             {
-                ActivateDerivationLawsForWords(token, file, ref fileIndexer);
+                ActivateDerivationLawsForWords(ref token, file, ref fileIndexer,ref countFrequenciesSeperately);
                 return true;
 
             }
 
             // if a number
-            if (ExtractNumericValueAndSuffix(token, out numericValue, out suffix))
+            if (ExtractNumericValueAndSuffix(ref token, out numericValue, out suffix))
             {
                 ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix);
                 return false;
@@ -398,21 +398,8 @@ namespace SearchEngine
         #region Derivation Laws For Words
 
 
-        private static void ActivateDerivationLawsForWords(string token, string[] file, ref int fileIndexer)
+        private static void ActivateDerivationLawsForWords(ref string token, string[] file, ref int fileIndexer,ref bool countFrequenciesSeperately)
         {
-
-            //if begins with $ - move the $ to the end of word, and activate rules for numbers
-            double numericValue;
-            string suffix;
-            if (token[0] == '$')
-            {
-                token = token;
-            }
-            if (token[0] == '$' && ExtractNumericValueAndSuffix(token.Substring(1, token.Length - 1), out numericValue, out suffix))
-            {
-                token = token.Substring(1, token.Length - 1) + "$";
-                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix);
-            }
             // if it`s a date
             if (monthes.ContainsKey(token) && fileIndexer + 1 < file.Length)
             {
@@ -437,6 +424,15 @@ namespace SearchEngine
 
 
                 }
+                countFrequenciesSeperately = true ;
+            }
+            double value1;
+            double value2;
+
+            if (fileIndexer+3< file.Length && token == "between" && Double.TryParse(NormalizeToken(file[fileIndexer+1]),out value1) && NormalizeToken(file[fileIndexer+2])=="and" && Double.TryParse(NormalizeToken(file[fileIndexer + 3]), out value2))
+            {
+                token = String.Format("Between {0} and {1}", value1, value2);
+                countFrequenciesSeperately = true;
             }
 
         }
@@ -467,17 +463,19 @@ namespace SearchEngine
             }
             if (suffix == "%" || nextToken == "percent" || nextToken == "percentage")
             {
-                token = token + "%";
-                fileIndexer++;
+                token = String.Format("{0}%", token);
+                if (nextToken == "percent" || nextToken == "percentage")
+                    fileIndexer++;
             }
             if (suffix == "$" || nextToken == "dollars")
             {
-                token = String.Format("{0} Dollars",numericValue);
-                fileIndexer++;
+                token = String.Format("{0} Dollars",token);
+                if (nextToken == "dollars")
+                    fileIndexer++;
             }
             if (fileIndexer + 2 < file.Length && nextToken == "us" && NormalizeToken(file[fileIndexer + 2]) == "dollars")
             {
-                token = String.Format("{0} Dollars", numericValue);
+                token = String.Format("{0} Dollars", token);
                 fileIndexer += 2;
             }
 
@@ -510,7 +508,7 @@ namespace SearchEngine
             return numericValue;
         }
 
-        private static bool ExtractNumericValueAndSuffix(string token, out double numericValue, out string suffix)
+        private static bool ExtractNumericValueAndSuffix(ref string token, out double numericValue, out string suffix)
         {
 
             //remove th from the end of number if exists 
@@ -529,46 +527,56 @@ namespace SearchEngine
                 numericValue = mone / mechane;
                 return true;
             }
-            else if (token.Length >= 2 && Double.TryParse((substeingedToken = token.Substring(0, token.Length - 2)).ToLower(), out numericValue))
-            {
-                suffix = token.Substring(token.Length - 2);
-                if (suffix == "th")
-                {
-                }
-                if (suffix == "st")
-                {
-                    return true;
-                }
-                if (suffix == "bm")
-                {
-                    return true;
-                }
-            }
             else if (token.Length > 1 & Double.TryParse((substeingedToken = token.Substring(0, token.Length - 1)).ToLower(), out numericValue))
             {
                 suffix = token.Substring(token.Length - 1);
                 if (suffix == "%")
                 {
+                    token = substeingedToken;
                     return true;
                 }
                 if (suffix == "$")
                 {
+                    token = substeingedToken;
                     return true;
                 }
                 if (suffix == "m")
                 {
+                    token = substeingedToken;
                     return true;
                 }
             }
             else if (token.Length > 1 & Double.TryParse((substeingedToken = token.Substring(1, token.Length - 1)).ToLower(), out numericValue))
             {
-                suffix = token.Substring(0,1);
+                suffix = token.Substring(0, 1);
                 if (suffix == "%")
                 {
+                    token = substeingedToken;
                     return true;
                 }
                 if (suffix == "$")
                 {
+                    token = substeingedToken;
+                    return true;
+                }
+            }
+
+            else if (token.Length >= 2 && Double.TryParse((substeingedToken = token.Substring(0, token.Length - 2)).ToLower(), out numericValue))
+            {
+                suffix = token.Substring(token.Length - 2);
+                if (suffix == "th")
+                {
+                    token = substeingedToken;
+                    return true;
+                }
+                if (suffix == "st")
+                {
+                    token = substeingedToken;
+                    return true;
+                }
+                if (suffix == "bm")
+                {
+                    token = substeingedToken;
                     return true;
                 }
             }
