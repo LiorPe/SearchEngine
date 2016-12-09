@@ -45,18 +45,19 @@ namespace SearchEngine
         private static HashSet<string> PrefixesOfNumbers = new HashSet<string>() { "$", "%",String.Empty };
         private static HashSet<string> SufffixesOfNumbers = new HashSet<string>() { "%", "$", "m", "th", "st", "rd", "bn", String.Empty };
 
-        //to remove:
-        public static string lastToken;
+        //To remove:
+        static string currentCorpusFile;
+
         #endregion
         public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex, out DocumentData[] DocsDats)
         {
-
-            string s = "";
             Dictionary<string, TermFrequency> postingFile = new Dictionary<string, TermFrequency>();
             Dictionary<string, DocumentData> documentsData = new Dictionary<string, DocumentData>();
             int numOfFiles = filePathes.Length;
             for (int i = 0; i < numOfFiles; i++)
             {
+                //to remove
+                currentCorpusFile = filePathes[i];
                 string[] file = FileReader.ReadTextFile(filePathes[i]);
                 int fileLength = file.Length;
                 int fileIndexer = 0;
@@ -134,7 +135,7 @@ namespace SearchEngine
                 }
                 else
                 {
-                    postingFile[term] = new TermFrequency(term, docNumber, termFrequencies[term]);
+                    postingFile[term] = new TermFrequency(term, docNumber, termFrequencies[term],currentCorpusFile);
                 }
 
             }
@@ -259,7 +260,7 @@ namespace SearchEngine
         /// 
         /// </summary>
         /// <param name="token"></param>
-        private static string NormalizeToken(string token)
+        public static string NormalizeToken(string token)
         {
             token = token.TrimEnd(SuffixToRemove).TrimStart(prefixToRemove).ToLower();
             return token;

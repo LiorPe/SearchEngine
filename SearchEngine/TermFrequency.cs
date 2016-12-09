@@ -9,7 +9,9 @@ namespace SearchEngine
         public int AmountOfTotalFrequencies;
         private string frequenciesInDocuments;
         public string FrequenciesInDocuments { get { return frequenciesInDocuments; }  }
+        public string CorpusFileName { get; set; }
         private int postingFileName;
+        
         public int PostingFileName
         {
             get
@@ -34,20 +36,12 @@ namespace SearchEngine
             }
         }
 
-        public TermFrequency(string term, string documentNumner, int amountOfFtrequncies)
+        public TermFrequency(string term, string documentNumner, int amountOfFtrequncies,string corpusFileName)
         {
             Term = term;
             frequenciesInDocuments = string.Format("{0} {1}", documentNumner, amountOfFtrequncies);
             AmountOfTotalFrequencies += amountOfFtrequncies;
-
-        }
-
-        public TermFrequency(string dataFromPostinfFiles)
-        {
-            string[] attributes = dataFromPostinfFiles.Split(Delimiter);
-            Term = attributes[0];
-            AmountOfTotalFrequencies = Int32.Parse(attributes[1]);
-            frequenciesInDocuments = attributes[2];
+            CorpusFileName = corpusFileName;
         }
 
         public void AddFrequencyInDocument(string documentNumner, int amountOfFtrequncies)

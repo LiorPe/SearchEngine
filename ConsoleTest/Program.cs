@@ -21,7 +21,7 @@ namespace ConsoleTest
 
             CreeateIndexForTheFirstTime();
             //LoadIndexFromMemory();
-             //Parse("00000000");
+            // Parse("\"shevardnadze");
 
             stopWatch.Stop();
 
@@ -62,6 +62,7 @@ namespace ConsoleTest
             bool countFrequenciesSeperately = false;
 
             Parser.InitStopWords(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt");
+            s = Parser.NormalizeToken(s);
             Parser.ActivateDerivationLaws(ref s, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, false, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
         }
     
