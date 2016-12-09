@@ -19,7 +19,7 @@ namespace SearchEngine
         public static HashSet<string> StopWords = null;
         private readonly static char[] SuffixToRemove = { '-', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '>', ',', '.', ':' };
         private readonly static char[] prefixToRemove = { '|', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', ',', '.', '%', '-', ':' };
-        private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',', '-', '.', ':' };
+        private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',', '-', '.', ':','|'};
         private static readonly Dictionary<string, string> monthes = new Dictionary<string, string>
         {
             {"january","01" },
@@ -90,7 +90,8 @@ namespace SearchEngine
         public static void IterateTokens(ref int fileIndexer, string[] file, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
         {
 
-
+            string[] splittedToken;
+            char[] tokenDelimiters = new char[] { ' ', '-' };
             do
             {
                 string token = file[fileIndexer];
@@ -106,9 +107,16 @@ namespace SearchEngine
                     {
                         documentLength++;
                         UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
-                        lastToken = token;
+                        if (countFrequenciesSeperately)
+                        {
+                            splittedToken = token.Split(tokenDelimiters);
+                            foreach (string subtoken in splittedToken)
+                            {
+                                if (subtoken!=String.Empty)
+                                    UpdateFrequencies(subtoken, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                            }
+                        }
                     }
-                    //Console.WriteLine(token);
                 }
                 fileIndexer++;
                 MoveIndexToNextToken(ref fileIndexer, file);
@@ -534,13 +542,14 @@ namespace SearchEngine
 
                 prefix = String.Empty;
                 suffix = String.Empty;
+                token = numericValue.ToString();
             }
             // if last char of token is a sign (100$)
             else if (token.Length>1 && Double.TryParse(token.Substring(0, token.Length - 1), out numericValue))
             {
                 prefix = String.Empty;
                 suffix = token.Substring(token.Length - 1);
-                token = token.Substring(0, token.Length - 1);
+                token = numericValue.ToString();
 
             }
             // if 2 last chars of token is a sign (100bn)
@@ -548,7 +557,7 @@ namespace SearchEngine
             {
                 prefix = String.Empty;
                 suffix = token.Substring(token.Length - 2);
-                token = token.Substring(0, token.Length - 2);
+                token = numericValue.ToString();
 
             }
             // if first char of token is a sign ($100)
@@ -556,7 +565,7 @@ namespace SearchEngine
             {
                 prefix = token.Substring(0, 1);
                 suffix = String.Empty;
-                token = token.Substring(1, token.Length - 1);
+                token = numericValue.ToString();
 
             }
             // if first and last char is a sign ($100m)
@@ -564,7 +573,7 @@ namespace SearchEngine
             {
                 prefix = token.Substring(0, 1);
                 suffix = token.Substring(token.Length - 1);
-                token = token.Substring(1, token.Length - 2);
+                token = numericValue.ToString();
 
             }
             // if first and last 2 chars are signs ($100bn)
@@ -572,7 +581,28 @@ namespace SearchEngine
             {
                 prefix = token.Substring(0, 1);
                 suffix = token.Substring(token.Length - 2);
-                token = token.Substring(1, token.Length - 3);
+                token = numericValue.ToString();
+
+            }
+            else if (largeNumbers.Keys.Any(s => originalToken.IndexOf(s) > -1))
+            {
+                prefix = String.Empty;
+                suffix = String.Empty;
+                foreach (string number in largeNumbers.Keys)
+                {
+                    int indexOfNumber = token.IndexOf(number);
+                    if (indexOfNumber >= 0)
+                    {
+                        token = token.Substring(0, indexOfNumber);
+                        if (Double.TryParse(token,out numericValue))
+                        {
+                            token = (numericValue * largeNumbers[number]).ToString();
+                        
+                            return true;
+                        }
+                        
+                    }
+                }
 
             }
             else

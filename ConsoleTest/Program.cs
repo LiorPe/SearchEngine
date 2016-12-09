@@ -19,9 +19,9 @@ namespace ConsoleTest
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
-            //CreeateIndexForTheFirstTime();
+            CreeateIndexForTheFirstTime();
             //LoadIndexFromMemory();
-            Parse("$104bn");
+             //Parse("00000000");
 
             stopWatch.Stop();
 
