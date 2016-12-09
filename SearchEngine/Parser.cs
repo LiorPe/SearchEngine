@@ -42,6 +42,9 @@ namespace SearchEngine
             {"billion",(int)1E3},
             {"trilion",(int)1E6},
         };
+        private static HashSet<string> PrefixesOfNumbers = new HashSet<string>() { "$", "%",String.Empty };
+        private static HashSet<string> SufffixesOfNumbers = new HashSet<string>() { "%", "$", "m", "th", "st", "rd", "bn", String.Empty };
+
         //to remove:
         public static string lastToken;
         #endregion
@@ -282,11 +285,12 @@ namespace SearchEngine
         }
 
 
-        private static bool ActivateDerivationLaws(ref string token, string[] file, ref int fileIndexer, ref bool tokenRecursivelyParsed, ref bool countFrequenciesSeperately, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
+        public static bool ActivateDerivationLaws(ref string token, string[] file, ref int fileIndexer, ref bool tokenRecursivelyParsed, ref bool countFrequenciesSeperately, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
         {
             string[] splittedToken;
             double numericValue;
             string suffix;
+            string prefix;
 
             //if token cnsists only from words
             if (token.All(Char.IsLetter))
@@ -297,9 +301,9 @@ namespace SearchEngine
             }
 
             // if a number
-            if (ExtractNumericValueAndSuffix(ref token, out numericValue, out suffix))
+            if (ExtractNumericValueAndSuffix(ref token, out numericValue, out suffix,out prefix))
             {
-                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix);
+                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue,suffix,prefix);
                 return false;
             }
 
@@ -438,7 +442,7 @@ namespace SearchEngine
         }
         #endregion
         #region Derivation Laws For Numbers
-        private static void ActivateDerivationLawsForNumbers(ref string token, string[] file, ref int fileIndexer, double numericValue, string suffix)
+        private static void ActivateDerivationLawsForNumbers(ref string token, string[] file, ref int fileIndexer, double numericValue, string suffix,string prefix)
         {
             numericValue = ParseLargeNumbers(ref token, numericValue, suffix, file, ref fileIndexer);
             string nextToken = string.Empty;
@@ -461,13 +465,13 @@ namespace SearchEngine
                 }
                 return;
             }
-            if (suffix == "%" || nextToken == "percent" || nextToken == "percentage")
+            if (prefix== "%" || suffix == "%" || nextToken == "percent" || nextToken == "percentage")
             {
                 token = String.Format("{0}%", token);
                 if (nextToken == "percent" || nextToken == "percentage")
                     fileIndexer++;
             }
-            if (suffix == "$" || nextToken == "dollars")
+            if (prefix == "$" || suffix == "$" || nextToken == "dollars")
             {
                 token = String.Format("{0} Dollars",token);
                 if (nextToken == "dollars")
@@ -488,14 +492,14 @@ namespace SearchEngine
 
             if (numericValue > 1E6)
             {
-                token = numericValue / 1E6 + " M";
+                token = numericValue / 1E6 + "M";
 
             }
             if (suffix == "m")
-                token = token + " M";
+                token = token + "M";
             if (suffix == "bn")
             {
-                token = numericValue * (int)1E3 + " M";
+                token = numericValue * (int)1E3 + "M";
             }
 
             // if number follows a large number in word
@@ -508,81 +512,85 @@ namespace SearchEngine
             return numericValue;
         }
 
-        private static bool ExtractNumericValueAndSuffix(ref string token, out double numericValue, out string suffix)
+        private static bool ExtractNumericValueAndSuffix(ref string token, out double numericValue, out string suffix, out string prefix)
         {
 
-            //remove th from the end of number if exists 
-            if (Double.TryParse(token, out numericValue))
-            {
-                suffix = String.Empty;
-                return true;
-            }
+            string originalToken = token;
             string[] splittedNumber = token.Split('/');
             double mone;
             double mechane;
-            string substeingedToken;
+            //if fraction a/n
             if (splittedNumber.Length == 2 && Double.TryParse(splittedNumber[0], out mone) && Double.TryParse(splittedNumber[1], out mechane))
             {
                 suffix = String.Empty;
+                prefix = String.Empty;
                 numericValue = mone / mechane;
                 return true;
             }
-            else if (token.Length > 1 & Double.TryParse((substeingedToken = token.Substring(0, token.Length - 1)).ToLower(), out numericValue))
+
+            // if all token is numner (1201)
+            if (Double.TryParse(token, out numericValue))
             {
+
+                prefix = String.Empty;
+                suffix = String.Empty;
+            }
+            // if last char of token is a sign (100$)
+            else if (token.Length>1 && Double.TryParse(token.Substring(0, token.Length - 1), out numericValue))
+            {
+                prefix = String.Empty;
                 suffix = token.Substring(token.Length - 1);
-                if (suffix == "%")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
-                if (suffix == "$")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
-                if (suffix == "m")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
-            }
-            else if (token.Length > 1 & Double.TryParse((substeingedToken = token.Substring(1, token.Length - 1)).ToLower(), out numericValue))
-            {
-                suffix = token.Substring(0, 1);
-                if (suffix == "%")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
-                if (suffix == "$")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
-            }
+                token = token.Substring(0, token.Length - 1);
 
-            else if (token.Length >= 2 && Double.TryParse((substeingedToken = token.Substring(0, token.Length - 2)).ToLower(), out numericValue))
+            }
+            // if 2 last chars of token is a sign (100bn)
+            else if (token.Length > 2 &&  Double.TryParse(token.Substring(0, token.Length - 2), out numericValue))
             {
+                prefix = String.Empty;
                 suffix = token.Substring(token.Length - 2);
-                if (suffix == "th")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
-                if (suffix == "st")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
-                if (suffix == "bm")
-                {
-                    token = substeingedToken;
-                    return true;
-                }
+                token = token.Substring(0, token.Length - 2);
+
+            }
+            // if first char of token is a sign ($100)
+            else if (token.Length > 1 &&  Double.TryParse(token.Substring(1, token.Length - 1), out numericValue))
+            {
+                prefix = token.Substring(0, 1);
+                suffix = String.Empty;
+                token = token.Substring(1, token.Length - 1);
+
+            }
+            // if first and last char is a sign ($100m)
+            else if (token.Length > 2 &&  Double.TryParse(token.Substring(1, token.Length - 2), out numericValue))
+            {
+                prefix = token.Substring(0, 1);
+                suffix = token.Substring(token.Length - 1);
+                token = token.Substring(1, token.Length - 2);
+
+            }
+            // if first and last 2 chars are signs ($100bn)
+            else if (token.Length > 3 &&  Double.TryParse(token.Substring(1, token.Length - 3), out numericValue))
+            {
+                prefix = token.Substring(0, 1);
+                suffix = token.Substring(token.Length - 2);
+                token = token.Substring(1, token.Length - 3);
+
+            }
+            else
+            {
+                prefix = String.Empty;
+                suffix = String.Empty;
+                return false;
+            }
+            // "%","$","m","th","st","rd","bm"
+
+            if (PrefixesOfNumbers.Contains(prefix) && SufffixesOfNumbers.Contains(suffix))
+                return true;
+            else
+            {
+                token = originalToken;
+                return false;
             }
 
-            suffix = string.Empty;
-            return false;
         }
         #endregion
     }

@@ -19,11 +19,11 @@ namespace ConsoleTest
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
-            CreeateIndexForTheFirstTime();
+            //CreeateIndexForTheFirstTime();
             //LoadIndexFromMemory();
-            //Parse("11332000$");
+            Parse("$104bn");
 
-                stopWatch.Stop();
+            stopWatch.Stop();
 
                 // Get the elapsed time as a TimeSpan value.
                 TimeSpan ts = stopWatch.Elapsed;
@@ -55,11 +55,14 @@ namespace ConsoleTest
             int fileIndexer = 0;
             string[] file = new string[]{ s };
             int documentLength = 0;
-            Dictionary<string, int> frequencies = new Dictionary<string, int>();
-            int mostFrequentTermFrequencies = 0;
+            Dictionary<string, int> termFrequencies = new Dictionary<string, int>();
+            int frquenciesOfMostFrequentTerm = 0;
             string mostFrequentTerm = String.Empty;
+            bool tokenRecursivelyParsed = false;
+            bool countFrequenciesSeperately = false;
+
             Parser.InitStopWords(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt");
-            Parser.IterateTokens(ref fileIndexer, file, false, ref documentLength, frequencies, ref mostFrequentTermFrequencies, ref mostFrequentTerm);
+            Parser.ActivateDerivationLaws(ref s, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, false, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
         }
     
     }
