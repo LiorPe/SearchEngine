@@ -17,9 +17,9 @@ namespace SearchEngine
         static readonly string BeginningOfTextTag = "<TEXT>";
         static readonly string EndOfTextTag = "</TEXT>";
         public static HashSet<string> StopWords= null;
-        private readonly static char[] SuffixToRemove = { '-','~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/','<','>',',', '-' };
-        private readonly static char[] prefixToRemove = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',' };
-        private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',','-','$' };
+        private readonly static char[] SuffixToRemove = { '-','~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/','>',',','.' };
+        private readonly static char[] prefixToRemove = { '|','~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<',  ',', '.', '%', '-' };
+        private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',','-','$','.' };
         private static readonly Dictionary<string, string> monthes = new Dictionary<string, string>
         {
             {"january","01" },
@@ -90,14 +90,15 @@ namespace SearchEngine
             do
             { 
                 string token = file[fileIndexer];
-                if (!IsAStopWord(token) && !EliminatedByCustomedRules(token))
+                token = NormalizeToken(token);
+                if (!EliminatedByCustomedRules(token))
                 {
                     bool tokenRecursivelyParsed = false;
                     bool countFrequenciesSeperately = false;
                     bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     if (useStemming && !tokenCanBeStemmed &&tokenRecursivelyParsed)
                         token = ActivateStemming(token);
-                    if (!tokenRecursivelyParsed)
+                    if (!tokenRecursivelyParsed && !IsAStopWord(token))
                     {
                         documentLength++;
                         UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
@@ -269,11 +270,12 @@ namespace SearchEngine
         /// <returns></returns>
         private static bool EliminatedByCustomedRules(string token)
         {
-            bool ans = false;
-            if (token[0] == '<' || token[token.Length - 1] == '>')
-                ans = true;
+            if (token == String.Empty)
+                return true;
+            if (token.Length>=2 &&  token[0] == '<' || token[token.Length - 1] == '>')
+                return true;
 
-            return ans;
+            return false;
         }
 
 
@@ -288,7 +290,6 @@ namespace SearchEngine
                 ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix);
                 return false;
             }
-            token = NormalizeToken(token);
             if (token == string.Empty)
             {
                 tokenRecursivelyParsed = true;
