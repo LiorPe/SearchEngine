@@ -19,9 +19,9 @@ namespace ConsoleTest
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
-                 CreeateIndexForTheFirstTime();
-                //LoadIndexFromMemory();
-
+            //CreeateIndexForTheFirstTime();
+            //LoadIndexFromMemory();
+            Parse("$50");
 
                 stopWatch.Stop();
 
@@ -49,6 +49,17 @@ namespace ConsoleTest
         {
             Indexer indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles");
             indexer.LoadMainDictionaryFromMemory();
+        }
+        public static void Parse(string s)
+        {
+            int fileIndexer = 0;
+            string[] file = new string[]{ s };
+            int documentLength = 0;
+            Dictionary<string, int> frequencies = new Dictionary<string, int>();
+            int mostFrequentTermFrequencies = 0;
+            string mostFrequentTerm = String.Empty;
+            Parser.InitStopWords(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt");
+            Parser.IterateTokens(ref fileIndexer, file, false, ref documentLength, frequencies, ref mostFrequentTermFrequencies, ref mostFrequentTerm);
         }
     
     }
