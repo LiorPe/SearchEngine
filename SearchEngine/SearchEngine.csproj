@@ -51,6 +51,7 @@
     <Compile Include="Indexer.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stemmer.cs" />
     <Compile Include="TermData.cs" />
     <Compile Include="TermFrequency.cs" />
   </ItemGroup>
