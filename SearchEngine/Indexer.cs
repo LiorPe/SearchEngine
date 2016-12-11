@@ -127,7 +127,7 @@ namespace SearchEngine
                 Dictionary<string, TermData> correlatedDictionary = splittedMainDictionary[postingFileName];
                 if (!correlatedDictionary.ContainsKey(termFreq.Term))
                 {
-                    correlatedDictionary[termFreq.Term] = new TermData(termFreq.Term, termFreq.AmountOfTotalFrequencies, postingFileName, lastRowWrittenInFile[postingFileName], termFreq.CorpusFileName);
+                    correlatedDictionary[termFreq.Term] = new TermData(termFreq.Term, termFreq.AmountOfTotalFrequencies, postingFileName, lastRowWrittenInFile[postingFileName]);
                     lastRowWrittenInFile[postingFileName]++;
                 }
                 else

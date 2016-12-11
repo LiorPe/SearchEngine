@@ -17,9 +17,9 @@ namespace SearchEngine
         static readonly string BeginningOfTextTag = "<TEXT>";
         static readonly string EndOfTextTag = "</TEXT>";
         public static HashSet<string> StopWords = null;
-        private readonly static char[] SuffixToRemove = { '-', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '>', ',', '.', ':' };
-        private readonly static char[] prefixToRemove = { '|', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', ',', '.', '%', '-', ':' };
-        private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',', '-', '.', ':','|'};
+        private readonly static char[] SuffixToRemove = { '-', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '>', ',', '.', ':','\t','\b' };
+        private readonly static char[] prefixToRemove = { '|', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', ',', '.', '%', '-', ':', '\t', '\b' };
+        private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',', '-', '.', ':','|', '\t', '\b' };
         private static readonly Dictionary<string, string> monthes = new Dictionary<string, string>
         {
             {"january","01" },
@@ -45,8 +45,6 @@ namespace SearchEngine
         private static HashSet<string> PrefixesOfNumbers = new HashSet<string>() { "$", "%",String.Empty };
         private static HashSet<string> SufffixesOfNumbers = new HashSet<string>() { "%", "$", "m", "th", "st", "rd", "bn", String.Empty };
 
-        //To remove:
-        static string currentCorpusFile;
 
         #endregion
         public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex, out DocumentData[] DocsDats)
@@ -56,8 +54,6 @@ namespace SearchEngine
             int numOfFiles = filePathes.Length;
             for (int i = 0; i < numOfFiles; i++)
             {
-                //to remove
-                currentCorpusFile = filePathes[i];
                 string[] file = FileReader.ReadTextFile(filePathes[i]);
                 int fileLength = file.Length;
                 int fileIndexer = 0;
@@ -101,17 +97,11 @@ namespace SearchEngine
                 {
                     bool tokenRecursivelyParsed = false;
                     bool countFrequenciesSeperately = false;
-                    //to remove:
-                    if (token == "cis--russia-decision")
-                    {
-                        token = token;
-                    }
                     bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     if (useStemming && !tokenCanBeStemmed && !tokenRecursivelyParsed)
                         token = ActivateStemming(token);
                     if (!tokenRecursivelyParsed && !IsAStopWord(token))
                     {
-
                         documentLength++;
                         UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                         if (countFrequenciesSeperately )
@@ -120,7 +110,7 @@ namespace SearchEngine
                             splittedToken = token.Split(tokenDelimiters);
                             foreach (string subtoken in splittedToken)
                             {
-                                if (subtoken!=String.Empty)
+                                if (subtoken!=String.Empty && !StopWords.Contains(NormalizeToken(subtoken)))
                                     UpdateFrequencies(subtoken, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                             }
                         }
@@ -142,7 +132,7 @@ namespace SearchEngine
                 }
                 else
                 {
-                    postingFile[term] = new TermFrequency(term, docNumber, termFrequencies[term],currentCorpusFile);
+                    postingFile[term] = new TermFrequency(term, docNumber, termFrequencies[term]);
                 }
 
             }
@@ -326,10 +316,21 @@ namespace SearchEngine
 
 
             // if two token connected by - (word-number,word-word,number-number,number word)
-            else if ((splittedToken = token.Split('-')).Length == 2 && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || Double.TryParse(splittedToken[0], out numericValue)) && (splittedToken[1].All(Char.IsLetter) || Double.TryParse(splittedToken[1], out numericValue)))
+            else if ((splittedToken = token.Split('-')).Length == 2 && splittedToken.All(s => s != String.Empty) && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || Double.TryParse(splittedToken[0], out numericValue)) && (splittedToken[1].All(Char.IsLetter) || Double.TryParse(splittedToken[1], out numericValue)))
             {
                 countFrequenciesSeperately = true;
                 return false;
+            }
+            else if (splittedToken.Length==2 && splittedToken.All(s => s != String.Empty)&& (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue,out suffix,out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)))
+            {
+                int recursiveFileIndexer = 0;
+                MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
+                if (recursiveFileIndexer < splittedToken.Length)
+                {
+                    IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    tokenRecursivelyParsed = true;
+                    return false;
+                }
             }
             // if 3 words connected by - (word-word-word)
             else if ((splittedToken = token.Split('-')).Length == 3 && splittedToken.All(s => s!=String.Empty)&& splittedToken[0].All(Char.IsLetter) && splittedToken[1].All(Char.IsLetter) && splittedToken[2].All(Char.IsLetter))
@@ -337,8 +338,19 @@ namespace SearchEngine
                 countFrequenciesSeperately = true;
                 return false;
             }
+            else if (splittedToken.Length == 3 && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue, out suffix, out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)) && (splittedToken[2].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[2], out numericValue, out suffix, out prefix)))
+            {
+                int recursiveFileIndexer = 0;
+                MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
+                if (recursiveFileIndexer < splittedToken.Length)
+                {
+                    IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    tokenRecursivelyParsed = true;
+                    return false;
+                }
+            }
             // if  initials (u.s.a -> usa)
-            else if ((splittedToken = token.Split('-')).Length > 1 && splittedToken.All(s => s.Length == 1 && Char.IsLetter(s[0])))
+            else if ((splittedToken = token.Split('.')).Length > 1 && splittedToken.All(s => s.Length == 1 && Char.IsLetter(s[0])))
             {
                 token = String.Empty;
                 foreach (string initial in splittedToken)
@@ -349,27 +361,29 @@ namespace SearchEngine
 
             }
             // if has possesive s in the end -> (lior`s apple -> lior-apple)
-            else if (token.Contains("'s") || token.Contains("`s"))
+            else if ( (token.IndexOf("'s")==token.Length-2 && token.IndexOf("'s")>=0) || (token.IndexOf("`s") == token.Length - 2 && token.IndexOf("`s") >= 0) )
             {
                 int endOfToken = Math.Max(token.IndexOf("'s"), token.IndexOf("`s"));
                 token = token.Substring(0, endOfToken);
-                int nextTokenIndex = fileIndexer + 1;
-                string nextToken=String.Empty;
-                while (nextTokenIndex < file.Length && StopWords.Contains(nextToken = NormalizeToken(file[nextTokenIndex])))
+                if (token.All(Char.IsLetter))
                 {
-                    nextTokenIndex++;
-                }
-                if (nextTokenIndex >= file.Length)
-                    return true;
-                if (nextToken.All(Char.IsLetter) || nextToken.All(Char.IsDigit))
+                    int nextTokenIndex = fileIndexer + 1;
+                    string nextToken = String.Empty;
+                    while (nextTokenIndex < file.Length && StopWords.Contains(nextToken = NormalizeToken(file[nextTokenIndex])))
+                    {
+                        nextTokenIndex++;
+                    }
+                    if (nextTokenIndex >= file.Length)
+                        return true;
+                    if (nextToken.All(Char.IsLetter) || nextToken.All(Char.IsDigit))
                     {
                         fileIndexer = nextTokenIndex;
                         token = String.Format("{0}-{1}", token, nextToken);
                         countFrequenciesSeperately = true;
                     }
+                    
 
-                return false;
-
+                }
             }
             // if begins with number and ends with letters 
             else if (token.All(Char.IsLetterOrDigit))
@@ -414,6 +428,7 @@ namespace SearchEngine
                     return false;
                 }
             }
+            tokenRecursivelyParsed = true;
             return false;
         }
 
@@ -526,7 +541,7 @@ namespace SearchEngine
             if (fileIndexer + 1 < file.Length && largeNumbers.ContainsKey(NormalizeToken(file[fileIndexer + 1])))
             {
                 fileIndexer++;
-                token = "" + (int)(numericValue * largeNumbers[NormalizeToken(file[fileIndexer])]) + " M";
+                token = "" + (int)(numericValue * largeNumbers[NormalizeToken(file[fileIndexer])]) + "M";
             }
 
             return numericValue;
@@ -534,17 +549,27 @@ namespace SearchEngine
 
         private static bool ExtractNumericValueAndSuffix(ref string token, out double numericValue, out string suffix, out string prefix)
         {
-
             string originalToken = token;
             string[] splittedNumber = token.Split('/');
             double mone;
             double mechane;
-            //if fraction a/n
-            if (splittedNumber.Length == 2 && Double.TryParse(splittedNumber[0], out mone) && Double.TryParse(splittedNumber[1], out mechane))
+
+            if (!token.Any(Char.IsDigit))
             {
                 suffix = String.Empty;
                 prefix = String.Empty;
+                numericValue = Double.NaN;
+                return false;
+
+            }
+
+            //if fraction a/n
+            if (splittedNumber.Length == 2 && Double.TryParse(splittedNumber[0], out mone) && Double.TryParse(splittedNumber[1], out mechane))
+            {
+
                 numericValue = mone / mechane;
+                suffix = String.Empty;
+                prefix = String.Empty;
                 return true;
             }
 
@@ -615,6 +640,8 @@ namespace SearchEngine
                         
                     }
                 }
+                token = originalToken;
+                return false;
 
             }
             else
