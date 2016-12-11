@@ -101,15 +101,22 @@ namespace SearchEngine
                 {
                     bool tokenRecursivelyParsed = false;
                     bool countFrequenciesSeperately = false;
+                    //to remove:
+                    if (token == "cis--russia-decision")
+                    {
+                        token = token;
+                    }
                     bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     if (useStemming && !tokenCanBeStemmed && !tokenRecursivelyParsed)
                         token = ActivateStemming(token);
                     if (!tokenRecursivelyParsed && !IsAStopWord(token))
                     {
+
                         documentLength++;
                         UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
-                        if (countFrequenciesSeperately)
+                        if (countFrequenciesSeperately )
                         {
+
                             splittedToken = token.Split(tokenDelimiters);
                             foreach (string subtoken in splittedToken)
                             {
@@ -310,22 +317,22 @@ namespace SearchEngine
             }
 
             // if a number
-            if (ExtractNumericValueAndSuffix(ref token, out numericValue, out suffix,out prefix))
+            if (ExtractNumericValueAndSuffix(ref token, out numericValue, out suffix, out prefix))
             {
-                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue,suffix,prefix);
+                ActivateDerivationLawsForNumbers(ref token, file, ref fileIndexer, numericValue, suffix, prefix);
                 return false;
             }
 
 
 
             // if two token connected by - (word-number,word-word,number-number,number word)
-            else if ((splittedToken = token.Split('-')).Length == 2 && (splittedToken[0].All(Char.IsLetter) || Double.TryParse(splittedToken[0], out numericValue)) && (splittedToken[1].All(Char.IsLetter) || Double.TryParse(splittedToken[1], out numericValue)))
+            else if ((splittedToken = token.Split('-')).Length == 2 && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || Double.TryParse(splittedToken[0], out numericValue)) && (splittedToken[1].All(Char.IsLetter) || Double.TryParse(splittedToken[1], out numericValue)))
             {
                 countFrequenciesSeperately = true;
                 return false;
             }
             // if 3 words connected by - (word-word-word)
-            else if ((splittedToken = token.Split('-')).Length == 3 && splittedToken[0].All(Char.IsLetter) && splittedToken[1].All(Char.IsLetter) && splittedToken[2].All(Char.IsLetter))
+            else if ((splittedToken = token.Split('-')).Length == 3 && splittedToken.All(s => s!=String.Empty)&& splittedToken[0].All(Char.IsLetter) && splittedToken[1].All(Char.IsLetter) && splittedToken[2].All(Char.IsLetter))
             {
                 countFrequenciesSeperately = true;
                 return false;
@@ -354,9 +361,13 @@ namespace SearchEngine
                 }
                 if (nextTokenIndex >= file.Length)
                     return true;
-                fileIndexer = nextTokenIndex;
-                token = String.Format("{0}-{1}", token, nextToken);
-                countFrequenciesSeperately = true;
+                if (nextToken.All(Char.IsLetter) || nextToken.All(Char.IsDigit))
+                    {
+                        fileIndexer = nextTokenIndex;
+                        token = String.Format("{0}-{1}", token, nextToken);
+                        countFrequenciesSeperately = true;
+                    }
+
                 return false;
 
             }

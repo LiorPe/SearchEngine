@@ -42,6 +42,12 @@ namespace SearchEngine
             frequenciesInDocuments = string.Format("{0} {1}", documentNumner, amountOfFtrequncies);
             AmountOfTotalFrequencies += amountOfFtrequncies;
             CorpusFileName = corpusFileName;
+
+            //To remover
+            if (term == "\"children")
+            {
+                term = term;
+            }
         }
 
         public void AddFrequencyInDocument(string documentNumner, int amountOfFtrequncies)

@@ -19,9 +19,10 @@ namespace ConsoleTest
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
-            CreeateIndexForTheFirstTime();
+             CreeateIndexForTheFirstTime();
             //LoadIndexFromMemory();
-            // Parse("\"shevardnadze");
+             //ParseFile("case--different	");
+            //ParseFile(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus\FB396161");
 
             stopWatch.Stop();
 
@@ -42,7 +43,7 @@ namespace ConsoleTest
             public static void CreeateIndexForTheFirstTime()
         {
             Indexer indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles");
-            indexer.IndexCorpus(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt",false);
+            indexer.IndexCorpus(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\filtered_corpus", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt",false);
         }
 
         public static void LoadIndexFromMemory()
@@ -50,7 +51,7 @@ namespace ConsoleTest
             Indexer indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles");
             indexer.LoadMainDictionaryFromMemory();
         }
-        public static void Parse(string s)
+        public static void DerivationLaws(string s)
         {
             int fileIndexer = 0;
             string[] file = new string[]{ s };
@@ -65,6 +66,21 @@ namespace ConsoleTest
             s = Parser.NormalizeToken(s);
             Parser.ActivateDerivationLaws(ref s, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, false, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
         }
-    
+
+        public static void ParseFile(string word)
+        {
+            int fileIndexer = 0;
+            string[] file = new string[] { word };
+            int documentLength = 0;
+            Dictionary<string, int> termFrequencies = new Dictionary<string, int>();
+            int frquenciesOfMostFrequentTerm = 0;
+            string mostFrequentTerm = String.Empty;
+            bool tokenRecursivelyParsed = false;
+            bool countFrequenciesSeperately = false;
+
+            Parser.InitStopWords(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt");
+            Parser.IterateTokens(ref fileIndexer, file, false, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+        }
+
     }
 }
