@@ -60,7 +60,7 @@ namespace GUI
             Indexer indexer = new Indexer(dest, dest);
             hasIndex = true;
             string stopwords;
-            if (src[src.Length] == '\\')
+            if (src[src.Length-1] == '\\')
                 stopwords = src + "stopwords.txt";
             else stopwords = src + "\\stopwords.txt";
             indexer.IndexCorpus(src, stopwords, stemming);
