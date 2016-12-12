@@ -44,7 +44,7 @@ namespace GUI
         private void Start_Click(object sender, RoutedEventArgs e)
         {
             //check for valid paths
-            if (!IsValid_src() || !IsVaild_dest())
+            if (!IsValid_src() || !IsVaild_dest("start"))
             {
                 System.Windows.MessageBox.Show("Please input valid paths.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -72,11 +72,21 @@ namespace GUI
             src = srcPath.Text;
             return System.IO.Directory.Exists(src);
         }
-        private bool IsVaild_dest()
+        private bool IsVaild_dest(string type)
         {
-            //true if not empty
-            dest = destPath.Text;
-            return dest != "";
+            if (type == "load")
+            {
+                //true if exists
+                src = srcPath.Text;
+                return System.IO.Directory.Exists(src);
+            }
+            else if (type == "start")
+            {
+                //true if not empty
+                dest = destPath.Text;
+                return dest != "";
+            }
+            else return false;
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
@@ -105,7 +115,7 @@ namespace GUI
 
         private void Load_Click(object sender, RoutedEventArgs e)
         {
-            if (!IsVaild_dest())
+            if (!IsVaild_dest("load"))
             {
                 System.Windows.MessageBox.Show("Please input valid path.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

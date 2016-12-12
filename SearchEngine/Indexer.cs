@@ -97,6 +97,8 @@ namespace SearchEngine
         //Create all files for posting files.
         private void InitPostingFiles()
         {
+            if (!Directory.Exists(_destPostingFiles))  // if it doesn't exist, create
+                Directory.CreateDirectory(_destPostingFiles);
             string fullPostingFilesPath;
             for (int i = 0; i < NumOfPostingFiles; i++)
             {
