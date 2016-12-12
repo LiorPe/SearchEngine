@@ -16,6 +16,7 @@ namespace SearchEngine
         static readonly string DocLanguageOpeningTag = "P=105>";
         static readonly string BeginningOfTextTag = "<TEXT>";
         static readonly string EndOfTextTag = "</TEXT>";
+        private static Stemmer sStemmer = new Stemmer();
         public static HashSet<string> StopWords = null;
         private readonly static char[] SuffixToRemove = { '-', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '>', ',', '.', ':','\t','\b' };
         private readonly static char[] prefixToRemove = { '|', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', ',', '.', '%', '-', ':', '\t', '\b' };
@@ -177,7 +178,7 @@ namespace SearchEngine
 
         private static string ActivateStemming(string term)
         {
-            throw new NotImplementedException();
+            return sStemmer.stemTerm(term);
         }
 
 
