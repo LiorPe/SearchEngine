@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 namespace GUI
 {
@@ -44,6 +45,8 @@ namespace GUI
 
         private void Start_Click(object sender, RoutedEventArgs e)
         {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             //check for valid paths
             if (!IsValid_src() || !IsVaild_dest("start"))
             {
@@ -65,6 +68,27 @@ namespace GUI
                 stopwords = src + "stop_words.txt";
             else stopwords = src + "\\stop_words.txt";
             idx.IndexCorpus(src, stopwords, stemming);
+            stopWatch.Stop();
+
+            #region statistics
+
+            // Get the elapsed time as a TimeSpan value.
+            TimeSpan ts = stopWatch.Elapsed;
+            // Format and display the TimeSpan value.
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            string result = string.Format("{0}", elapsedTime);
+
+            // Get number of indexed documents
+            int fileCount = Directory.GetFiles(src).Length-1; //Find a better way to do this
+            // Get number of unique terms
+            int terms = 0;
+            #endregion
+
+            // Show statistics window
+            StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
+            sWin.ShowDialog();
         }
 
         private bool IsValid_src()
