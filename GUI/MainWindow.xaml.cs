@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
+using System.IO;
 
 namespace GUI
 {
@@ -77,8 +78,14 @@ namespace GUI
             if (type == "load")
             {
                 //true if exists
-                src = srcPath.Text;
-                return System.IO.Directory.Exists(src);
+                dest = destPath.Text;
+                string target;
+                if (dest[dest.Length - 1] == '\\')
+                    target = dest;
+                else target = dest + '\\';
+                if (!File.Exists(target + "MainDictionary.zip"))
+                    return false;
+                return System.IO.Directory.Exists(dest);
             }
             else if (type == "start")
             {
@@ -97,7 +104,31 @@ namespace GUI
             //TODO: Delete posting files and dictionary here
             idx = null;
             hasIndex = false;
+            Delete_Files();
             System.Windows.MessageBox.Show("The IR Engine has been reset.", "IREngine Reset", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void Delete_Files()
+        {
+            string target;
+            if (dest[dest.Length - 1] == '\\')
+                target = dest;
+            else target = dest + '\\';
+            if (File.Exists(target + "MainDictionary.zip"))
+                File.Delete(target + "MainDictionary.zip");
+            if (File.Exists(target + "SortedDictionary.txt"))
+                File.Delete(target + "SortedDictionary.txt");
+            Boolean stop = false;
+            int i = 0;
+            while (!stop)
+            {
+                if (File.Exists(target + i + ".txt"))
+                {
+                    File.Delete(target + i + ".txt");
+                    i++;
+                }
+                else stop = true;
+            }
         }
 
         private void Show_Click(object sender, RoutedEventArgs e)
