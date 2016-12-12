@@ -192,7 +192,11 @@ namespace SearchEngine
                 }
             }
             MainDictionary = new ObservableCollection<TermData>(allTerms);
-            File.WriteAllLines(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\SortedDictionary.txt", mainDictionaryFile);
+            string sortedDest;
+            if (_mainDictionaryFilePath[_mainDictionaryFilePath.Length - 1] == '\\')
+                sortedDest = _mainDictionaryFilePath + "SortedDictionary.txt";
+            else sortedDest = _mainDictionaryFilePath + "\\SortedDictionary.txt";
+            File.WriteAllLines(sortedDest, mainDictionaryFile);
         }
 
         public void SaveMainDictionaryToMemory()

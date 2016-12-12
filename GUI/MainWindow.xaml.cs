@@ -57,13 +57,13 @@ namespace GUI
 
             src = srcPath.Text;
             dest = destPath.Text;
-            Indexer indexer = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest);
             hasIndex = true;
             string stopwords;
             if (src[src.Length-1] == '\\')
-                stopwords = src + "stopwords.txt";
-            else stopwords = src + "\\stopwords.txt";
-            indexer.IndexCorpus(src, stopwords, stemming);
+                stopwords = src + "stop_words.txt";
+            else stopwords = src + "\\stop_words.txt";
+            idx.IndexCorpus(src, stopwords, stemming);
         }
 
         private bool IsValid_src()
@@ -116,9 +116,9 @@ namespace GUI
             else
                 stemming = false;
             dest = destPath.Text;
-            Indexer indexer = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest);
             hasIndex = true;
-            indexer.LoadMainDictionaryFromMemory();
+            idx.LoadMainDictionaryFromMemory();
         }
         public string src_path
         {
