@@ -55,7 +55,7 @@ namespace GUI
             }
             src = srcPath.Text;
             dest = destPath.Text;
-            idx = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest, Mode.Create);
             hasIndex = true;
             /*ProgressWindow pWin = new ProgressWindow(ref idx);
             pWin.Show();*/
