@@ -11,6 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "ConsoleTest\
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUI", "GUI\GUI.csproj", "{EEC52217-D2E2-4F46-9A30-EBC81DDFFF61}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5F209B22-7466-4D13-A90F-983610958CA0} = {5F209B22-7466-4D13-A90F-983610958CA0}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

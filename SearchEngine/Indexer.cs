@@ -31,6 +31,13 @@ namespace SearchEngine
         public ObservableCollection<TermData> MainDictionary;
         public const string MainDictionaryFileName = "MainDictionary.zip";
 
+        // for showing progress:
+        
+        //progress statues between 0-1 
+        double progress = 0;
+        //Message about stauts
+        string status;
+
         #region Inits
 
         public Indexer(string destPostingFiles, string mainDictionaryFilePath)
@@ -75,11 +82,22 @@ namespace SearchEngine
             Parser.InitStopWords(stopWordsFilePath);
             for (int i = 0; i < size; i++)
             {
+                string filedBeingProccessed=String.Empty;
+                foreach (string fileName in docFilesNames[i])
+                {
+                    filedBeingProccessed += String.Format("{0};", Path.GetFileName(fileName));
+
+                }
+                status = String.Format("Parsing files: {0}", filedBeingProccessed);
                 Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, out docsData);
+                status = String.Format("Indexing files: {0}", filedBeingProccessed);
                 IndexParsedTerms(termsFrequencies, docsData);
-                Console.WriteLine("{0}/{1}", i, size);
+                progress = (double)(i+1) / (double)(size+1);
+                Console.WriteLine("{0} , {1}", status, progress);
             }
+            status = "Merging main dictionary"; 
             MergeSplittedDictionaries();
+            status = "Saving dictionary to file";
             SaveMainDictionaryToMemory();
         }
 
