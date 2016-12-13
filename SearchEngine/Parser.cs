@@ -48,10 +48,10 @@ namespace SearchEngine
 
 
         #endregion
-        public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex, out DocumentData[] DocsDats)
+        public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex, out Dictionary<string, DocumentData> documentsData)
         {
             Dictionary<string, TermFrequency> postingFile = new Dictionary<string, TermFrequency>();
-            Dictionary<string, DocumentData> documentsData = new Dictionary<string, DocumentData>();
+            documentsData = new Dictionary<string, DocumentData>();
             int numOfFiles = filePathes.Length;
             for (int i = 0; i < numOfFiles; i++)
             {
@@ -80,7 +80,6 @@ namespace SearchEngine
                 }
             }
             termsToIndex = postingFile.Values.ToArray<TermFrequency>();
-            DocsDats = documentsData.Values.ToArray<DocumentData>();
 
         }
 
