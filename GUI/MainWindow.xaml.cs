@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
 
 namespace GUI
 {
@@ -41,7 +42,6 @@ namespace GUI
             src = "";
             ResizeMode = ResizeMode.NoResize;
         }
-
 
         private void Start_Click(object sender, RoutedEventArgs e)
         {
@@ -90,6 +90,12 @@ namespace GUI
             // Show statistics window
             StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
             sWin.ShowDialog();
+        }
+
+        private void progressThread()
+        {
+            ProgressWindow pWin = new ProgressWindow(ref idx);
+            pWin.Show();
         }
 
         private bool IsValid_src()
