@@ -107,12 +107,6 @@ namespace GUI
 
         }
 
-        private void progressThread()
-        {
-            ProgressWindow pWin = new ProgressWindow(ref idx);
-            pWin.Show();
-        }
-
         private bool IsValid_src()
         {
             //true if exists
