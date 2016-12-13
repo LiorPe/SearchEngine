@@ -57,8 +57,9 @@ namespace GUI
             dest = destPath.Text;
             idx = new Indexer(dest, dest);
             hasIndex = true;
-            ProgressWindow pWin = new ProgressWindow(ref idx);
-            pWin.Show();
+            /*ProgressWindow pWin = new ProgressWindow(ref idx);
+            pWin.Show();*/
+            ShowProgress();
             //check stemming checkbox
             if ((bool)stemCheck.IsChecked)
                 stemming = true;
@@ -90,6 +91,20 @@ namespace GUI
             // Show statistics window
             StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
             sWin.ShowDialog();
+        }
+
+        private void ShowProgress()
+        {
+
+            Thread t = new Thread(() =>
+            {
+                ProgressWindow pWin = new ProgressWindow(ref idx);
+                pWin.Show();
+            });
+
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+
         }
 
         private void progressThread()

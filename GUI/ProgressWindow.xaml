@@ -16,8 +16,8 @@
             <RowDefinition Height="0.30*"/>
             <RowDefinition Height="0.1*"/>
         </Grid.RowDefinitions>
-        <ProgressBar x:Name="pBar" Grid.Row="1" Minimum="0" Maximum="1" Value="{Binding progress}"></ProgressBar>
+        <ProgressBar x:Name="pBar" Grid.Row="1" Minimum="0" Maximum="1" Value="{Binding Progress}"></ProgressBar>
         <TextBlock Text="{Binding ElementName=pBar, Path=Value, StringFormat={}{0:0}%}" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
-        <TextBlock x:Name="statusTB" Grid.Row="3" VerticalAlignment="Center" Text="{Binding status}"></TextBlock>
+        <TextBlock x:Name="statusTB" Grid.Row="3" VerticalAlignment="Center" Text="{Binding Status}"></TextBlock>
     </Grid>
 </Window>
