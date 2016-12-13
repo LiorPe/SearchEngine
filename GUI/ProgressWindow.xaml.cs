@@ -32,9 +32,18 @@ namespace GUI
             index.PropertyChanged += delegate (Object sender, PropertyChangedEventArgs e)
             {
                 if (e.PropertyName == "Status")
-                    statusTB.Text = ((Indexer)sender).status;
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        statusTB.Text = ((Indexer)sender).status;
+                    });
                 if (e.PropertyName == "Progress")
+                this.Dispatcher.Invoke(() =>
+                {
                     pBar.Value = ((Indexer)sender).progress;
+                    pBarPercent.Text = Convert.ToInt32(((Indexer)sender).progress*100).ToString() +"%";
+                    if (Convert.ToInt32(((Indexer)sender).progress * 100) == 100)
+                        Close();
+                });
             };
         }
     }

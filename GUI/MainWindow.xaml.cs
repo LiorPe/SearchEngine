@@ -17,6 +17,8 @@ using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
 using System.Threading;
+using System.Windows.Threading;
+using System.ComponentModel;
 
 namespace GUI
 {
@@ -43,8 +45,7 @@ namespace GUI
             ResizeMode = ResizeMode.NoResize;
         }
 
-
-        private void Start_Click(object sender, RoutedEventArgs e)
+        private async void Start_Click(object sender, RoutedEventArgs e)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -58,20 +59,12 @@ namespace GUI
             dest = destPath.Text;
             idx = new Indexer(dest, dest, Mode.Create);
             hasIndex = true;
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += _Start_Click;
+            worker.RunWorkerAsync();
             ProgressWindow pWin = new ProgressWindow(ref idx);
-            pWin.Show();
-            //ShowProgress();
-            //check stemming checkbox
-            if ((bool)stemCheck.IsChecked)
-                stemming = true;
-            else
-                stemming = false;
-
-            string stopwords;
-            if (src[src.Length-1] == '\\')
-                stopwords = src + "stop_words.txt";
-            else stopwords = src + "\\stop_words.txt";
-            idx.IndexCorpus(src, stopwords, stemming);
+            pWin.ShowDialog();
             stopWatch.Stop();
 
             #region statistics
@@ -85,7 +78,7 @@ namespace GUI
             string result = string.Format("{0}", elapsedTime);
 
             // Get number of indexed documents
-            int fileCount = Directory.GetFiles(src).Length-1;
+            int fileCount = Directory.GetFiles(src).Length - 1;
             // Get number of unique terms
             int terms = idx.MainDictionary.Count();
             #endregion
@@ -93,6 +86,33 @@ namespace GUI
             // Show statistics window
             StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
             sWin.ShowDialog();
+        }
+
+        private void _Start_Click(object sender, DoWorkEventArgs e)
+        {
+
+            this.Dispatcher.Invoke(() =>
+            {
+                src = srcPath.Text;
+                dest = destPath.Text;
+            });
+            //ShowProgress();
+            //check stemming checkbox
+            this.Dispatcher.Invoke(() =>
+            {
+                if ((bool)stemCheck.IsChecked)
+                    stemming = true;
+                else
+                    stemming = false;
+            });
+
+            string stopwords;
+            if (src[src.Length-1] == '\\')
+                stopwords = src + "stop_words.txt";
+            else stopwords = src + "\\stop_words.txt";
+            idx.IndexCorpus(src, stopwords, stemming);
+
+            
         }
 
         private void ShowProgress()
@@ -112,7 +132,7 @@ namespace GUI
         private bool IsValid_src()
         {
             //true if exists
-            src = srcPath.Text;
+                src = srcPath.Text;
             return System.IO.Directory.Exists(src);
         }
         private bool IsVaild_dest(string type)
@@ -132,7 +152,7 @@ namespace GUI
             else if (type == "start")
             {
                 //true if not empty
-                dest = destPath.Text;
+                    dest = destPath.Text;
                 return dest != "";
             }
             else return false;

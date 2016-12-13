@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="Indexing in progress..." Height="100" Width="300"
+        Title="Indexing in progress..." Height="100" Width="500"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Grid>
@@ -16,8 +16,8 @@
             <RowDefinition Height="0.30*"/>
             <RowDefinition Height="0.1*"/>
         </Grid.RowDefinitions>
-        <ProgressBar x:Name="pBar" Grid.Row="1" Minimum="0" Maximum="1" Value="{Binding Progress}"></ProgressBar>
-        <TextBlock Text="{Binding ElementName=pBar, Path=Value, StringFormat={}{0:0}%}" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <ProgressBar Name="pBar" Grid.Row="1" Minimum="0" Maximum="1" Value="{Binding Progress}"></ProgressBar>
+        <TextBlock x:Name="pBarPercent" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
         <TextBlock x:Name="statusTB" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Status}"></TextBlock>
     </Grid>
 </Window>

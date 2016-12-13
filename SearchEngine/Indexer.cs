@@ -145,6 +145,7 @@ namespace SearchEngine
             status = "Saving dictionary to file";
 
             SaveMainDictionaryToMemory();
+            progress = 1;
         }
 
         //Find all languages exist in documents datas
