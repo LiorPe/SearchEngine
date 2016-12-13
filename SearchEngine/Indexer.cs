@@ -69,6 +69,8 @@ namespace SearchEngine
             }
         }
 
+        public ObservableCollection<string> DocLanguages;
+        private Dictionary<string, DocumentData> _documnentsData;
         #region Inits
 
         public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
@@ -118,7 +120,6 @@ namespace SearchEngine
                 }
 
             }
-            DocumentData[] docsData;
             TermFrequency[] termsFrequencies;
             int size = docFilesNames.Length;
             Parser.InitStopWords(stopWordsFilePath);
@@ -131,16 +132,32 @@ namespace SearchEngine
 
                 }
                 status = String.Format("Parsing files: {0}", filedBeingProccessed);
-                Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, out docsData);
+                Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, out _documnentsData);
                 status = String.Format("Indexing files: {0}", filedBeingProccessed);
-                IndexParsedTerms(termsFrequencies, docsData);
+                IndexParsedTerms(termsFrequencies, _documnentsData);
                 progress = (double)(i+1) / (double)(size+1);
                 Console.WriteLine("{0} , {1}", status, progress);
             }
             status = "Merging main dictionary"; 
             MergeSplittedDictionaries();
+            status = "Finding all languages exist in courpus";
+            ExtractLanguages();
             status = "Saving dictionary to file";
+
             SaveMainDictionaryToMemory();
+        }
+
+        //Find all languages exist in documents datas
+        private void ExtractLanguages()
+        {
+            HashSet<string> languages = new HashSet<string>();
+            foreach (DocumentData docData in _documnentsData.Values)
+            {
+                string language = docData.Language;
+                if (!languages.Contains(language))
+                    languages.Add(language);
+            }
+            DocLanguages = new ObservableCollection<string>(languages);
         }
 
         //init dictionary whichmaps the posting file and the last availabe row
@@ -178,7 +195,7 @@ namespace SearchEngine
             }
         }
         #endregion
-        private void IndexParsedTerms(TermFrequency[] termsToIndex, DocumentData[] docsData)
+        private void IndexParsedTerms(TermFrequency[] termsToIndex, Dictionary<string, DocumentData> docsData)
         {
             int size = termsToIndex.Length;
             TermFrequency termFreq;
@@ -266,10 +283,11 @@ namespace SearchEngine
             var formatter = new BinaryFormatter();
             string fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileName;
             System.IO.File.Delete(fullPath);
+            DictionaryData dictionaryData = new DictionaryData(this);
             using (var outputFile = new FileStream(fullPath, FileMode.CreateNew))
             using (var compressionStream = new GZipStream(outputFile, CompressionMode.Compress))
             {
-                formatter.Serialize(compressionStream, splittedMainDictionary);
+                formatter.Serialize(compressionStream, dictionaryData);
                 compressionStream.Flush();
             }
         }
@@ -286,15 +304,44 @@ namespace SearchEngine
         {
             var formatter = new BinaryFormatter();
             string fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileName;
+            DictionaryData dictionaryData;
 
             using (var outputFile = new FileStream(fullPath, FileMode.Open))
             using (var compressionStream = new GZipStream(
                                      outputFile, CompressionMode.Decompress))
             {
-                splittedMainDictionary = (Dictionary<string, TermData>[])formatter.Deserialize(compressionStream);
+                dictionaryData = (DictionaryData)formatter.Deserialize(compressionStream);
                 compressionStream.Flush();
             }
-            MergeSplittedDictionaries();
+            splittedMainDictionary = dictionaryData._splittedMainDictionary;
+            lastRowWrittenInFile = dictionaryData._lastRowWrittenInFile;
+            MainDictionary = dictionaryData._mainDictionary;
+            DocLanguages = dictionaryData._docLanguages;
+            _documnentsData = dictionaryData._docData;
+        }
+
+        [Serializable]
+        internal class DictionaryData
+        {
+            // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
+            // ptr to file (row number in which term is stored)
+            internal Dictionary<string, TermData>[] _splittedMainDictionary;
+            // Saves what is the last row that was written in each posting file (so you can know what is the next availabe row infile)
+            internal Dictionary<int, int> _lastRowWrittenInFile;
+            //Path for directory in which postinf files will be saved.
+            internal ObservableCollection<TermData> _mainDictionary;
+            internal ObservableCollection<string> _docLanguages;
+            internal  Dictionary<string, DocumentData> _docData;
+
+
+            public DictionaryData(Indexer indexer)
+            {
+                _splittedMainDictionary = indexer.splittedMainDictionary;
+                _lastRowWrittenInFile = indexer.lastRowWrittenInFile;
+                _mainDictionary = indexer.MainDictionary;
+                _docLanguages = indexer.DocLanguages;
+                _docData = indexer._documnentsData;
+            }
 
         }
     }
