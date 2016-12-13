@@ -34,9 +34,19 @@ namespace SearchEngine
         // for showing progress:
         
         //progress statues between 0-1 
-        double progress = 0;
-        //Message about stauts
-        string status;
+        double _progress = 0;
+        public double progress
+        {
+            get { return _progress; }
+            set { _progress = value; }
+        }
+        //Message about status
+        string _status;
+        public string status
+        {
+            get { return _status; }
+            set { _status = value; }
+        }
 
         #region Inits
 

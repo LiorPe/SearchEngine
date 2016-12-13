@@ -53,16 +53,17 @@ namespace GUI
                 System.Windows.MessageBox.Show("Please input valid paths.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+            src = srcPath.Text;
+            dest = destPath.Text;
+            idx = new Indexer(dest, dest);
+            hasIndex = true;
+            ProgressWindow pWin = new ProgressWindow(ref idx);
+            pWin.Show();
             //check stemming checkbox
             if ((bool)stemCheck.IsChecked)
                 stemming = true;
             else
                 stemming = false;
-
-            src = srcPath.Text;
-            dest = destPath.Text;
-            idx = new Indexer(dest, dest);
-            hasIndex = true;
             string stopwords;
             if (src[src.Length-1] == '\\')
                 stopwords = src + "stop_words.txt";
@@ -81,9 +82,9 @@ namespace GUI
             string result = string.Format("{0}", elapsedTime);
 
             // Get number of indexed documents
-            int fileCount = Directory.GetFiles(src).Length-1; //Find a better way to do this
+            int fileCount = Directory.GetFiles(src).Length-1;
             // Get number of unique terms
-            int terms = 0;
+            int terms = idx.MainDictionary.Count();
             #endregion
 
             // Show statistics window
