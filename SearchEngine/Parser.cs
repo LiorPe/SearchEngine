@@ -158,7 +158,7 @@ namespace SearchEngine
 
         public static void InitStopWords(string stopWordsFilePath)
         {
-            string[] stopWords = File.ReadAllText(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt").Split(new char[] { '\n', '\r' });
+            string[] stopWords = File.ReadAllText(stopWordsFilePath).Split(new char[] { '\n', '\r' });
             StopWords = new HashSet<string>(stopWords);
         }
 

@@ -44,10 +44,10 @@
         </ComboBox>
         <CheckBox x:Name="stemCheck" Grid.Column="1" Grid.Row="5" IsChecked="True" VerticalAlignment="Center" MinWidth="80" Margin="0,6">Enable Stemming (Porter's algorithm)</CheckBox>
         <Label Grid.Column="1" Grid.Row="3">Enter destination path:</Label>
-        <TextBox x:Name="srcPath" Grid.Column="1" Grid.Row="4"></TextBox>
+        <TextBox x:Name="destPath" Grid.Column="1" Grid.Row="4"></TextBox>
         <Button x:Name="src_browse_button" Content="Browse" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" Width="60"  Click="src_browse_button_Click" Margin="2,3,2,4"/>
         <Label Grid.Column="1" Grid.Row="1">Enter source path:</Label>
-        <TextBox x:Name="destPath" Grid.Column="1" Grid.Row="2"></TextBox>
+        <TextBox x:Name="srcPath" Grid.Column="1" Grid.Row="2"></TextBox>
         <Button x:Name="dst_browse_button" Content="Browse" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Width="60"  Click="dst_browse_button_Click" Margin="2,4,2,3"/>
     </Grid>
 </Window>

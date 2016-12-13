@@ -14,6 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
+using System.IO;
+using System.Diagnostics;
 
 namespace GUI
 {
@@ -43,8 +45,10 @@ namespace GUI
 
         private void Start_Click(object sender, RoutedEventArgs e)
         {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             //check for valid paths
-            if (!IsValid_src() || !IsVaild_dest())
+            if (!IsValid_src() || !IsVaild_dest("start"))
             {
                 System.Windows.MessageBox.Show("Please input valid paths.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -57,13 +61,34 @@ namespace GUI
 
             src = srcPath.Text;
             dest = destPath.Text;
-            Indexer indexer = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest);
             hasIndex = true;
             string stopwords;
-            if (src[src.Length] == '\\')
-                stopwords = src + "stopwords.txt";
-            else stopwords = src + "\\stopwords.txt";
-            indexer.IndexCorpus(src, stopwords, stemming);
+            if (src[src.Length-1] == '\\')
+                stopwords = src + "stop_words.txt";
+            else stopwords = src + "\\stop_words.txt";
+            idx.IndexCorpus(src, stopwords, stemming);
+            stopWatch.Stop();
+
+            #region statistics
+
+            // Get the elapsed time as a TimeSpan value.
+            TimeSpan ts = stopWatch.Elapsed;
+            // Format and display the TimeSpan value.
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            string result = string.Format("{0}", elapsedTime);
+
+            // Get number of indexed documents
+            int fileCount = Directory.GetFiles(src).Length-1; //Find a better way to do this
+            // Get number of unique terms
+            int terms = 0;
+            #endregion
+
+            // Show statistics window
+            StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
+            sWin.ShowDialog();
         }
 
         private bool IsValid_src()
@@ -72,11 +97,27 @@ namespace GUI
             src = srcPath.Text;
             return System.IO.Directory.Exists(src);
         }
-        private bool IsVaild_dest()
+        private bool IsVaild_dest(string type)
         {
-            //true if not empty
-            dest = destPath.Text;
-            return dest != "";
+            if (type == "load")
+            {
+                //true if exists
+                dest = destPath.Text;
+                string target;
+                if (dest[dest.Length - 1] == '\\')
+                    target = dest;
+                else target = dest + '\\';
+                if (!File.Exists(target + "MainDictionary.zip"))
+                    return false;
+                return System.IO.Directory.Exists(dest);
+            }
+            else if (type == "start")
+            {
+                //true if not empty
+                dest = destPath.Text;
+                return dest != "";
+            }
+            else return false;
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
@@ -87,7 +128,31 @@ namespace GUI
             //TODO: Delete posting files and dictionary here
             idx = null;
             hasIndex = false;
+            Delete_Files();
             System.Windows.MessageBox.Show("The IR Engine has been reset.", "IREngine Reset", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void Delete_Files()
+        {
+            string target;
+            if (dest[dest.Length - 1] == '\\')
+                target = dest;
+            else target = dest + '\\';
+            if (File.Exists(target + "MainDictionary.zip"))
+                File.Delete(target + "MainDictionary.zip");
+            if (File.Exists(target + "SortedDictionary.txt"))
+                File.Delete(target + "SortedDictionary.txt");
+            Boolean stop = false;
+            int i = 0;
+            while (!stop)
+            {
+                if (File.Exists(target + i + ".txt"))
+                {
+                    File.Delete(target + i + ".txt");
+                    i++;
+                }
+                else stop = true;
+            }
         }
 
         private void Show_Click(object sender, RoutedEventArgs e)
@@ -105,7 +170,7 @@ namespace GUI
 
         private void Load_Click(object sender, RoutedEventArgs e)
         {
-            if (!IsVaild_dest())
+            if (!IsVaild_dest("load"))
             {
                 System.Windows.MessageBox.Show("Please input valid path.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -116,9 +181,9 @@ namespace GUI
             else
                 stemming = false;
             dest = destPath.Text;
-            Indexer indexer = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest);
             hasIndex = true;
-            indexer.LoadMainDictionaryFromMemory();
+            idx.LoadMainDictionaryFromMemory();
         }
         public string src_path
         {
