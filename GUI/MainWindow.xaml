@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
         Title="IREngine" Height="350" Width="700"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
     <Grid x:Name="mainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="32*" MinWidth="10"/>
@@ -31,7 +32,7 @@
             <RowDefinition Height="0.2*" MinHeight="40"/>
             <RowDefinition Height="0.1*" MinHeight="20"/>
         </Grid.RowDefinitions >
-        <Button x:Name="StartBtn" Grid.Column="4" Grid.ColumnSpan="3" Grid.Row="1" Grid.RowSpan="6" Click="Start_Click" MinWidth="70" MinHeight="60">START</Button>
+        <Button x:Name="StartBtn" Grid.Column="4" Grid.ColumnSpan="3" Grid.Row="1" Grid.RowSpan="6" Click="Start_Click" MinWidth="70" MinHeight="60">Index Corpus</Button>
         <Button x:Name="Reset" Grid.Column="6" Grid.Row="8" Grid.RowSpan="2" Click="Reset_Click" MinWidth="30" MinHeight="30">RESET</Button>
         <Button x:Name="Show" Grid.Column="4" Grid.Row="8" Grid.RowSpan="2" Click="Load_Click" MinWidth="30" MinHeight="30">LOAD</Button>
         <Button x:Name="Load" Grid.Column="1" Grid.Row="9" Click="Show_Click" MinWidth="80" MinHeight="20">Show Dictionary</Button>

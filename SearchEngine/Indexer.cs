@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 namespace SearchEngine
 {
     public enum Mode { Create ,Load };
-    public class Indexer
+    public class Indexer: INotifyPropertyChanged
     {
         // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
         // ptr to file (row number in which term is stored)
@@ -33,11 +34,40 @@ namespace SearchEngine
         public const string MainDictionaryFileName = "MainDictionary.zip";
 
         // for showing progress:
+        public event PropertyChangedEventHandler PropertyChanged;
+        
+        public void NotifyPropertyChanged(string propName)
+        {
+            if (this.PropertyChanged != null)
+                this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        }
         
         //progress statues between 0-1 
-        double progress = 0;
-        //Message about stauts
-        string status;
+        double _progress = 0;
+        public double progress
+        {
+            get { return _progress; }
+            set
+            {
+                if (_progress != value)
+                {
+                    _progress = value;
+                    NotifyPropertyChanged("Progress");
+                }
+            }
+        }
+        //Message about status
+        string _status;
+        public string status
+        {
+            get { return _status; }
+            set { if(_status != value)
+                    {
+                        _status = value;
+                        NotifyPropertyChanged("Status");
+                    }
+            }
+        }
 
         public ObservableCollection<string> DocLanguages;
         private Dictionary<string, DocumentData> _documnentsData = new Dictionary<string, DocumentData>();
@@ -53,10 +83,10 @@ namespace SearchEngine
 
             if (mode == Mode.Create)
             {
-                InitLastRowWrittenInFile();
-                InitMainDictionary();
-                InitLastRowWrittenInFile();
-                InitPostingFiles();
+            InitLastRowWrittenInFile();
+            InitMainDictionary();
+            InitLastRowWrittenInFile();
+            InitPostingFiles();
             }
 
 
@@ -115,6 +145,7 @@ namespace SearchEngine
             status = "Saving dictionary to file";
 
             SaveMainDictionaryToMemory();
+            progress = 1;
         }
 
         //Find all languages exist in documents datas
