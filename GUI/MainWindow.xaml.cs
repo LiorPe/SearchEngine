@@ -61,7 +61,7 @@ namespace GUI
 
             src = srcPath.Text;
             dest = destPath.Text;
-            idx = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest,Mode.Create);
             hasIndex = true;
             string stopwords;
             if (src[src.Length-1] == '\\')
@@ -181,7 +181,7 @@ namespace GUI
             else
                 stemming = false;
             dest = destPath.Text;
-            idx = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest,Mode.Load);
             hasIndex = true;
             idx.LoadMainDictionaryFromMemory();
         }
