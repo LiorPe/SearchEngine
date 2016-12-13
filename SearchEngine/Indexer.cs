@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace SearchEngine
 {
+    public enum Mode { Create ,Load };
     public class Indexer: INotifyPropertyChanged
     {
         // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
@@ -34,7 +35,7 @@ namespace SearchEngine
 
         // for showing progress:
         public event PropertyChangedEventHandler PropertyChanged;
-
+        
         public void NotifyPropertyChanged(string propName)
         {
             if (this.PropertyChanged != null)
@@ -70,23 +71,34 @@ namespace SearchEngine
 
         #region Inits
 
-        public Indexer(string destPostingFiles, string mainDictionaryFilePath)
+        public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
         {
             NumOfPostingFiles = 2;
             ParserFactor = 4;
             _destPostingFiles = destPostingFiles;
+            charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
+            _mainDictionaryFilePath = mainDictionaryFilePath;
+
+            if (mode == Mode.Create)
+            {
             InitLastRowWrittenInFile();
             InitMainDictionary();
             InitLastRowWrittenInFile();
             InitPostingFiles();
-            charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
-            _mainDictionaryFilePath = mainDictionaryFilePath;
+            }
+
+
         }
 
         public void IndexCorpus(string corpusDirectoryPath, string stopWordsFilePath, bool useStemming)
         {
-            string[] allFileEntries = Directory.GetFiles(corpusDirectoryPath);
-            int amountOfFiles = allFileEntries.Length;
+            HashSet<string> allFileEntries = new HashSet<string>( Directory.GetFiles(corpusDirectoryPath));
+            if (allFileEntries.Contains(stopWordsFilePath))
+            {
+                allFileEntries.Remove(stopWordsFilePath);
+
+            }
+            int amountOfFiles = allFileEntries.Count;
             string[][] docFilesNames;
             if (amountOfFiles % ParserFactor == 0)
                 docFilesNames = new string[amountOfFiles / ParserFactor][];
@@ -96,7 +108,7 @@ namespace SearchEngine
             int lastOccupied = 0;
             for (int i = 0; i < amountOfFiles; i++)
             {
-                set_of_files[lastOccupied] = allFileEntries[i];
+                set_of_files[lastOccupied] = allFileEntries.ElementAt(i);
                 lastOccupied++;
                 if (i % ParserFactor == ParserFactor - 1 || i == amountOfFiles - 1)
                 {

@@ -65,6 +65,7 @@ namespace GUI
                 stemming = true;
             else
                 stemming = false;
+
             string stopwords;
             if (src[src.Length-1] == '\\')
                 stopwords = src + "stop_words.txt";
@@ -197,7 +198,7 @@ namespace GUI
             else
                 stemming = false;
             dest = destPath.Text;
-            idx = new Indexer(dest, dest);
+            idx = new Indexer(dest, dest,Mode.Load);
             hasIndex = true;
             idx.LoadMainDictionaryFromMemory();
         }
