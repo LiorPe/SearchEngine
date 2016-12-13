@@ -43,6 +43,7 @@ namespace GUI
             ResizeMode = ResizeMode.NoResize;
         }
 
+
         private void Start_Click(object sender, RoutedEventArgs e)
         {
             Stopwatch stopWatch = new Stopwatch();
@@ -57,9 +58,9 @@ namespace GUI
             dest = destPath.Text;
             idx = new Indexer(dest, dest, Mode.Create);
             hasIndex = true;
-            /*ProgressWindow pWin = new ProgressWindow(ref idx);
-            pWin.Show();*/
-            ShowProgress();
+            ProgressWindow pWin = new ProgressWindow(ref idx);
+            pWin.Show();
+            //ShowProgress();
             //check stemming checkbox
             if ((bool)stemCheck.IsChecked)
                 stemming = true;

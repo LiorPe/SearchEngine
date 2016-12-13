@@ -29,7 +29,13 @@ namespace GUI
             InitializeComponent();
             index = idx;
             DataContext = "index";
-
+            index.PropertyChanged += delegate (Object sender, PropertyChangedEventArgs e)
+            {
+                if (e.PropertyName == "Status")
+                    statusTB.Text = ((Indexer)sender).status;
+                if (e.PropertyName == "Progress")
+                    pBar.Value = ((Indexer)sender).progress;
+            };
         }
     }
 }
