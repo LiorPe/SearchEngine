@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace SearchEngine
 {
@@ -13,6 +10,7 @@ namespace SearchEngine
         #region Attributes
         public static int counter = 0;
         static readonly string DocNumberOpeningTag = "<DOCNO>";
+        static readonly string PreecedantDocLanguage = "Language:";
         static readonly string DocLanguageOpeningTag = "P=105>";
         static readonly string BeginningOfTextTag = "<TEXT>";
         static readonly string EndOfTextTag = "</TEXT>";
@@ -48,10 +46,9 @@ namespace SearchEngine
 
 
         #endregion
-        public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex, out Dictionary<string, DocumentData> documentsData)
+        public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex,  Dictionary<string, DocumentData> documentsData)
         {
             Dictionary<string, TermFrequency> postingFile = new Dictionary<string, TermFrequency>();
-            documentsData = new Dictionary<string, DocumentData>();
             int numOfFiles = filePathes.Length;
             for (int i = 0; i < numOfFiles; i++)
             {
@@ -63,6 +60,8 @@ namespace SearchEngine
                     string docNo = GetDocNummer(file, ref fileIndexer);
                     if (fileIndexer == fileLength)
                         break;
+                    FindBegginingOfText(file, ref fileIndexer);
+
                     string docLanguage = GetLanguage(file, ref fileIndexer);
                     string mostFrequentTerm = "";
                     int documentLength = 0;
@@ -70,7 +69,6 @@ namespace SearchEngine
                     Dictionary<string, int> termFrequencies = new Dictionary<string, int>();
 
 
-                    FindBegginingOfText(file, ref fileIndexer);
                     IterateTokens(ref fileIndexer, file, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     documentsData[docNo] = new DocumentData(docNo, mostFrequentTerm, frquenciesOfMostFrequentTerm, termFrequencies.Keys.Count, docLanguage, documentLength);
                     UpdatePostingFile(termFrequencies, postingFile, docNo);
@@ -212,22 +210,40 @@ namespace SearchEngine
         /// <returns></returns>
         private static string GetLanguage(string[] file, ref int fileIndexer)
         {
-            //Reach to opening tag of doc number
-            for (; file[fileIndexer] != DocLanguageOpeningTag && file[fileIndexer] != BeginningOfTextTag; fileIndexer++) ;
-            //If reached to begginning of text (which means this doc doesn`t have language tag)
-            if (file[fileIndexer] == BeginningOfTextTag)
+            string language=String.Empty;
+
+            if (file[fileIndexer]==PreecedantDocLanguage  && fileIndexer+3< file.Length)
             {
-                return "";
+                fileIndexer += 2;
+                string openningTag = file[fileIndexer];
+                // if the language attched to the tag (P=105>French)
+                if (openningTag.Contains(DocLanguageOpeningTag) && openningTag.Substring(DocLanguageOpeningTag.Length).Length > 0)
+                {
+                    language = openningTag.Substring(DocLanguageOpeningTag.Length);
+                    fileIndexer+=2;
+
+                }
+                // if the language sperated by space from tag (P=105> French)
+                else if (openningTag.Contains(DocLanguageOpeningTag) && openningTag.Substring(DocLanguageOpeningTag.Length).Length == 0)
+                {
+                    fileIndexer++;
+                    language = file[fileIndexer];
+                    fileIndexer += 2;
+
+                }
+
             }
-            else
+
+            if (fileIndexer + 2 < file.Length && file[fileIndexer]== "Article")
             {
-                //Move to doc language tag 
-                fileIndexer++;
-                string language = file[fileIndexer];
-                // Skip on closing tag of doc language tag
-                fileIndexer = fileIndexer + 2;
-                return language;
+                fileIndexer += 2;
             }
+
+            language = language.TrimEnd(',');
+            if (language.Length==0 || !language.All(Char.IsLetter))
+                language= String.Empty;
+            return language;
+
 
         }
 

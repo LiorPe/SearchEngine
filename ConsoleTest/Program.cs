@@ -18,10 +18,10 @@ namespace ConsoleTest
 
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
-
-             CreeateIndexForTheFirstTime();
-            //LoadIndexFromMemory();
-             //ParseFile("case--different	");
+            Indexer indexer;
+             CreeateIndexForTheFirstTime(out indexer);
+             //LoadIndexFromMemory(out indexer);
+            //ParseFile("case--different	");
             //ParseFile(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus\FB396161");
 
             stopWatch.Stop();
@@ -35,20 +35,25 @@ namespace ConsoleTest
                 string result = string.Format("Duration: {0}", elapsedTime);
                 Console.WriteLine(result);
 
-                Console.ReadKey();
-
-
-
+            string lanuages = String.Empty;
+                foreach (string language in indexer.DocLanguages)
+            {
+                lanuages += language+ "\n";
             }
-            public static void CreeateIndexForTheFirstTime()
+            Console.WriteLine(lanuages);
+            Console.ReadKey();
+
+
+        }
+        public static void CreeateIndexForTheFirstTime(out Indexer indexer)
         {
-            Indexer indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles",Mode.Create);
+            indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles",Mode.Create);
             indexer.IndexCorpus(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus\stop_words.txt", false);
         }
 
-        public static void LoadIndexFromMemory()
+        public static void LoadIndexFromMemory(out Indexer indexer)
         {
-            Indexer indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles",Mode.Load);
+            indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles",Mode.Load);
             indexer.LoadMainDictionaryFromMemory();
         }
         public static void DerivationLaws(string s)

@@ -1,5 +1,8 @@
-﻿namespace SearchEngine
+﻿using System;
+
+namespace SearchEngine
 {
+    [Serializable]
     public class DocumentData
     {
         private static char[] Delimiter = new char[] { '~' };

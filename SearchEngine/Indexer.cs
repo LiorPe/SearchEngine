@@ -40,7 +40,7 @@ namespace SearchEngine
         string status;
 
         public ObservableCollection<string> DocLanguages;
-        private Dictionary<string, DocumentData> _documnentsData;
+        private Dictionary<string, DocumentData> _documnentsData = new Dictionary<string, DocumentData>();
         #region Inits
 
         public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
@@ -95,16 +95,16 @@ namespace SearchEngine
             Parser.InitStopWords(stopWordsFilePath);
             for (int i = 0; i < size; i++)
             {
-                string filedBeingProccessed=String.Empty;
+                string filesBeingProccessed=String.Empty;
                 foreach (string fileName in docFilesNames[i])
                 {
-                    filedBeingProccessed += String.Format("{0};", Path.GetFileName(fileName));
+                    filesBeingProccessed += String.Format("{0};", Path.GetFileName(fileName));
 
                 }
-                status = String.Format("Parsing files: {0}", filedBeingProccessed);
-                Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, out _documnentsData);
-                status = String.Format("Indexing files: {0}", filedBeingProccessed);
-                IndexParsedTerms(termsFrequencies, _documnentsData);
+                status = String.Format("Parsing files: {0}", filesBeingProccessed);
+                Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, _documnentsData);
+                status = String.Format("Indexing files: {0}", filesBeingProccessed);
+                IndexParsedTerms(termsFrequencies);
                 progress = (double)(i+1) / (double)(size+1);
                 Console.WriteLine("{0} , {1}", status, progress);
             }
@@ -124,7 +124,11 @@ namespace SearchEngine
             foreach (DocumentData docData in _documnentsData.Values)
             {
                 string language = docData.Language;
-                if (!languages.Contains(language))
+                if (language != String.Empty)
+                {
+                    language = language;
+                }
+                if (language!=String.Empty && !languages.Contains(language))
                     languages.Add(language);
             }
             DocLanguages = new ObservableCollection<string>(languages);
@@ -165,7 +169,7 @@ namespace SearchEngine
             }
         }
         #endregion
-        private void IndexParsedTerms(TermFrequency[] termsToIndex, Dictionary<string, DocumentData> docsData)
+        private void IndexParsedTerms(TermFrequency[] termsToIndex)
         {
             int size = termsToIndex.Length;
             TermFrequency termFreq;
@@ -272,7 +276,7 @@ namespace SearchEngine
 
         public void LoadMainDictionaryFromMemory()
         {
-            var formatter = new BinaryFormatter();
+                var formatter = new BinaryFormatter();
             string fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileName;
             DictionaryData dictionaryData;
 
