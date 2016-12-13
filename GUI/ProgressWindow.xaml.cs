@@ -23,37 +23,26 @@ namespace GUI
     public partial class ProgressWindow : Window
     {
         Indexer index;
+
         public ProgressWindow(ref Indexer idx)
         {
             InitializeComponent();
             index = idx;
-        }
+            index.PropertyChanged += delegate (Object sender, PropertyChangedEventArgs e) {
+                if(e.PropertyName == "Progress")
+                {
+                    pBar.Value = index.progress;
+                    if (pBar.Value == 100)
+                    {
+                        Close();
+                    }
+                }
+                if (e.PropertyName == "Status")
+                {
+                    statusTB.Text = index.status;
+                }
+            };
 
-        private void Window_ContentRendered(object sender, EventArgs e)
-        {
-            BackgroundWorker worker = new BackgroundWorker();
-            worker.WorkerReportsProgress = true;
-            worker.DoWork += worker_DoWork;
-            worker.ProgressChanged += worker_ProgressChanged;
-
-            worker.RunWorkerAsync();
-        }
-        void worker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            while(index.progress < 100)
-            {
-                (sender as BackgroundWorker).ReportProgress(Convert.ToInt32(index.progress));
-                Thread.Sleep(100);
-            }
-            (sender as BackgroundWorker).ReportProgress(100);
-        }
-
-        void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            pBar.Value = e.ProgressPercentage;
-            statusTB.Text = index.status;
-            if (pBar.Value == 100)
-                Close();
         }
     }
 }

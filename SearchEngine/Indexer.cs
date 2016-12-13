@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SearchEngine
 {
-    public class Indexer
+    public class Indexer: INotifyPropertyChanged
     {
         // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
         // ptr to file (row number in which term is stored)
@@ -32,20 +33,39 @@ namespace SearchEngine
         public const string MainDictionaryFileName = "MainDictionary.zip";
 
         // for showing progress:
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged(string propName)
+        {
+            if (this.PropertyChanged != null)
+                this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        }
         
         //progress statues between 0-1 
         double _progress = 0;
         public double progress
         {
             get { return _progress; }
-            set { _progress = value; }
+            set
+            {
+                if (_progress != value)
+                {
+                    _progress = value;
+                    NotifyPropertyChanged("Progress");
+                }
+            }
         }
         //Message about status
         string _status;
         public string status
         {
             get { return _status; }
-            set { _status = value; }
+            set { if(_status != value)
+                    {
+                        _status = value;
+                        NotifyPropertyChanged("Status");
+                    }
+            }
         }
 
         #region Inits
