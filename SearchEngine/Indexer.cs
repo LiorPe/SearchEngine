@@ -352,6 +352,7 @@ namespace SearchEngine
             _documnentsData = dictionaryData._docData;
             status = "Done";
             progress = 1;
+            return true;
         }
 
         [Serializable]
