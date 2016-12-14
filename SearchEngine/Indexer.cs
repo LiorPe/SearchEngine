@@ -78,7 +78,7 @@ namespace SearchEngine
 
         public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
         {
-            NumOfPostingFiles = 100;
+            NumOfPostingFiles = 2;//100;
             ParserFactor = 4;
             _destPostingFiles = destPostingFiles;
             charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
