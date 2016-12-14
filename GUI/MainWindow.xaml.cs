@@ -230,7 +230,7 @@ namespace GUI
         }
         public string dst_path
         {
-            get { return destPath.Text; }
+            get { return destPath.Text; }   
             set { destPath.Text = value; }
         }
 

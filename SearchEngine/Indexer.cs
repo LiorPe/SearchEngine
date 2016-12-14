@@ -75,7 +75,7 @@ namespace SearchEngine
 
         public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
         {
-            NumOfPostingFiles = 2;
+            NumOfPostingFiles = 100;
             ParserFactor = 4;
             _destPostingFiles = destPostingFiles;
             charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
@@ -308,7 +308,9 @@ namespace SearchEngine
 
         public void LoadMainDictionaryFromMemory()
         {
-                var formatter = new BinaryFormatter();
+            progress = 0;
+            status = "Reading main dictionary data file";
+            var formatter = new BinaryFormatter();
             string fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileName;
             DictionaryData dictionaryData;
 
@@ -321,9 +323,14 @@ namespace SearchEngine
             }
             splittedMainDictionary = dictionaryData._splittedMainDictionary;
             lastRowWrittenInFile = dictionaryData._lastRowWrittenInFile;
-            MainDictionary = dictionaryData._mainDictionary;
+            //MainDictionary = dictionaryData._mainDictionary;
+            status = "Merging sub-dictionaries to main dictionary";
+            progress = 0.75;
+            MergeSplittedDictionaries();
             DocLanguages = dictionaryData._docLanguages;
             _documnentsData = dictionaryData._docData;
+            status = "Done";
+            progress = 1;
         }
 
         [Serializable]
@@ -335,7 +342,7 @@ namespace SearchEngine
             // Saves what is the last row that was written in each posting file (so you can know what is the next availabe row infile)
             internal Dictionary<int, int> _lastRowWrittenInFile;
             //Path for directory in which postinf files will be saved.
-            internal ObservableCollection<TermData> _mainDictionary;
+            //internal ObservableCollection<TermData> _mainDictionary;
             internal ObservableCollection<string> _docLanguages;
             internal  Dictionary<string, DocumentData> _docData;
 
@@ -344,7 +351,7 @@ namespace SearchEngine
             {
                 _splittedMainDictionary = indexer.splittedMainDictionary;
                 _lastRowWrittenInFile = indexer.lastRowWrittenInFile;
-                _mainDictionary = indexer.MainDictionary;
+                //_mainDictionary = indexer.MainDictionary;
                 _docLanguages = indexer.DocLanguages;
                 _docData = indexer._documnentsData;
             }
