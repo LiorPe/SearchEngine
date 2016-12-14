@@ -32,6 +32,7 @@ namespace GUI
         string dest;
         string src;
         Indexer idx;
+        Boolean loadSuccess;
 
         public MainWindow()
         {
@@ -43,6 +44,7 @@ namespace GUI
             dest = "";
             src = "";
             ResizeMode = ResizeMode.NoResize;
+            loadSuccess = false;
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
@@ -168,6 +170,7 @@ namespace GUI
             Lang.ItemsSource = null;
             idx = null;
             hasIndex = false;
+            loadSuccess = false;
             Delete_Files();
             System.Windows.MessageBox.Show("The IR Engine has been reset.", "IREngine Reset", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -184,8 +187,7 @@ namespace GUI
             {
                 try
                 {
-                    if(file.Name != "MainDictionary.zip")
-                        File.Delete(target + file.Name);
+                    File.Delete(target + file.Name);
                 }
                 catch
                 {
@@ -229,12 +231,17 @@ namespace GUI
             worker.RunWorkerAsync();
             IndeterminateProgressWindow ipWin = new IndeterminateProgressWindow(ref idx);
             ipWin.ShowDialog();
+            if(!loadSuccess)
+            {
+                System.Windows.MessageBox.Show("Dictionary loading failed.", "Loading Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             Lang.ItemsSource = idx.DocLanguages;
+
         }
 
         private void _Load_Click(object sender, DoWorkEventArgs e)
         {
-            idx.LoadMainDictionaryFromMemory();
+            loadSuccess = idx.LoadMainDictionaryFromMemory(stemming);
         }
         public string src_path
         {
