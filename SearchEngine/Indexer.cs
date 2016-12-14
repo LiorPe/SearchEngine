@@ -347,40 +347,11 @@ namespace SearchEngine
             lastRowWrittenInFile = dictionaryData._lastRowWrittenInFile;
             //MainDictionary = dictionaryData._mainDictionary;
             status = "Merging sub-dictionaries to main dictionary";
-            progress = 0.75;
             MergeSplittedDictionaries();
             DocLanguages = dictionaryData._docLanguages;
             _documnentsData = dictionaryData._docData;
             status = "Done";
             progress = 1;
-            return true;
-        }
-
-        public void WriteToXmlFile()
-        {
-            TermData[] TermsSortedByRank = MainDictionary.ToArray();
-            Array.Sort(TermsSortedByRank, (term1, term2) => term2.CollectionFrequency.CompareTo(term1.CollectionFrequency));
-
-            using (XmlWriter writer = XmlWriter.Create("SortedTerms.xml"))
-            {
-                writer.WriteStartDocument();
-                writer.WriteStartElement("Terms");
-                int ranking = 1;
-                foreach (TermData term in TermsSortedByRank)
-                {
-                    writer.WriteStartElement("Term");
-
-                    writer.WriteElementString("Term", term.Term);
-                    writer.WriteElementString("Ranking", ranking.ToString());
-                    writer.WriteElementString("logRanking", Math.Log10(ranking).ToString());
-                    writer.WriteElementString("CF", term.CollectionFrequency.ToString());
-                    writer.WriteElementString("DF", term.DocumentFrequency.ToString());
-                    ranking++;
-                    writer.WriteEndElement();
-                }
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
-            }
         }
 
         [Serializable]
