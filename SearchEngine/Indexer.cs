@@ -78,7 +78,7 @@ namespace SearchEngine
 
         public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
         {
-            NumOfPostingFiles = 100;
+            NumOfPostingFiles = 2;
             ParserFactor = 4;
             _destPostingFiles = destPostingFiles;
             charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
@@ -228,32 +228,87 @@ namespace SearchEngine
             TermFrequency termToIndex;
             while (i < size)
             {
+
                 termToIndex = termsToIndex[i];
+
                 int fileName = termToIndex.PostingFileName;
                 string postfileDestPath = _destPostingFiles + "\\" + fileName + ".txt";
-                string[] postingFile = FileReader.ReadUtfFile(postfileDestPath);
-                int sizeOfPostingFile = postingFile.Length;
-
-                int lastTermInSameFileIndex = i;
-                for (; lastTermInSameFileIndex < size - 1 && termsToIndex[lastTermInSameFileIndex + 1].PostingFileName == fileName; lastTermInSameFileIndex++) ;
-
-                if (termsToIndex[lastTermInSameFileIndex].RowInPostFile >= postingFile.Length)
-                    Array.Resize<string>(ref postingFile, termsToIndex[lastTermInSameFileIndex].RowInPostFile + 1);
-                for (int j = i; j <= lastTermInSameFileIndex; j++)
+                string duplicatePostingFileDestPath = _destPostingFiles + "\\" + fileName + "_duplicate" + ".txt";
+                try
                 {
-                    termToIndex = termsToIndex[j];
-                    if (postingFile[termToIndex.RowInPostFile] == null)
-                        postingFile[termToIndex.RowInPostFile] = termToIndex.FrequenciesInDocuments;
-                    else
+                    File.Move(postfileDestPath, duplicatePostingFileDestPath);
+
+                }
+                catch
+                {
+                    File.Delete(duplicatePostingFileDestPath);
+                    throw new Exception();
+                }
+                int fileCursor = 0;
+                bool endOfFile;
+                string sourcePostingFileEntry = null;
+                using (StreamReader sourcePostingFile = new StreamReader(duplicatePostingFileDestPath))
+                {
+                    using (StreamWriter targetPostingFile = File.CreateText(postfileDestPath))
                     {
-                        TermFrequency.AddFrequenciesToString(postingFile[termToIndex.RowInPostFile], termToIndex.FrequenciesInDocuments);
+                        endOfFile = false;
+                        while (i < size && (termToIndex = termsToIndex[i]).PostingFileName == fileName)
+                        {
+
+                            //to remove
+                            int rowToUpdate = termToIndex.RowInPostFile;
+                            while (!endOfFile & fileCursor < rowToUpdate)
+                            {
+                                sourcePostingFileEntry = sourcePostingFile.ReadLine();
+                                targetPostingFile.WriteLine(sourcePostingFileEntry);
+                                fileCursor++;
+                            }
+                            if (!endOfFile)
+                                sourcePostingFileEntry = sourcePostingFile.ReadLine();
+                            if (endOfFile && sourcePostingFileEntry == null)
+                            {
+                                targetPostingFile.WriteLine(termToIndex.FrequenciesInDocuments);
+                                endOfFile = true;
+                            }
+                            else
+                            {
+                                sourcePostingFileEntry = TermFrequency.AddFrequenciesToString(sourcePostingFileEntry, termToIndex.FrequenciesInDocuments);
+                                targetPostingFile.WriteLine(sourcePostingFileEntry);
+                                fileCursor++;
+
+                            }
+                            i++;
+
+
+                        }
                     }
                 }
-                File.WriteAllLines(postfileDestPath, postingFile);
-                i = lastTermInSameFileIndex + 1;
-
-
+                File.Delete(duplicatePostingFileDestPath);
             }
+
+            //    string[] postingFile = FileReader.ReadUtfFile(postfileDestPath);
+            //    int sizeOfPostingFile = postingFile.Length;
+
+            //    int lastTermInSameFileIndex = i;
+            //    for (; lastTermInSameFileIndex < size - 1 && termsToIndex[lastTermInSameFileIndex + 1].PostingFileName == fileName; lastTermInSameFileIndex++) ;
+
+            //    if (termsToIndex[lastTermInSameFileIndex].RowInPostFile >= postingFile.Length)
+            //        Array.Resize<string>(ref postingFile, termsToIndex[lastTermInSameFileIndex].RowInPostFile + 1);
+            //    for (int j = i; j <= lastTermInSameFileIndex; j++)
+            //    {
+            //        termToIndex = termsToIndex[j];
+            //        if (postingFile[termToIndex.RowInPostFile] == null)
+            //            postingFile[termToIndex.RowInPostFile] = termToIndex.FrequenciesInDocuments;
+            //        else
+            //        {
+            //            TermFrequency.AddFrequenciesToString(postingFile[termToIndex.RowInPostFile], termToIndex.FrequenciesInDocuments);
+            //        }
+            //    }
+            //    File.WriteAllLines(postfileDestPath, postingFile);
+            //    i = lastTermInSameFileIndex + 1;
+
+
+            //}
         }
 
         public void MergeSplittedDictionaries()

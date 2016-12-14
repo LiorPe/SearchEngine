@@ -45,6 +45,9 @@ namespace GUI
             src = "";
             ResizeMode = ResizeMode.NoResize;
             loadSuccess = false;
+            // for Lior
+            srcPath.Text= @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus";
+            destPath.Text = @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles";
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
