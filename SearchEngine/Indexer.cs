@@ -211,12 +211,13 @@ namespace SearchEngine
                 Dictionary<string, TermData> correlatedDictionary = splittedMainDictionary[postingFileName];
                 if (!correlatedDictionary.ContainsKey(termFreq.Term))
                 {
-                    correlatedDictionary[termFreq.Term] = new TermData(termFreq.Term, termFreq.AmountOfTotalFrequencies, postingFileName, lastRowWrittenInFile[postingFileName]);
+                    correlatedDictionary[termFreq.Term] = new TermData(termFreq.Term,termFreq.DocumentFrequency, termFreq.CollectionFrequency, postingFileName, lastRowWrittenInFile[postingFileName]);
                     lastRowWrittenInFile[postingFileName]++;
                 }
                 else
                 {
-                    correlatedDictionary[termFreq.Term].RawFrequency += termFreq.AmountOfTotalFrequencies;
+                    correlatedDictionary[termFreq.Term].DocumentFrequency += termFreq.DocumentFrequency;
+                    correlatedDictionary[termFreq.Term].CollectionFrequency += termFreq.CollectionFrequency;
                 }
                 termFreq.PostingFileName = postingFileName;
                 termFreq.RowInPostFile = correlatedDictionary[termFreq.Term].PtrToFile;

@@ -7,20 +7,24 @@ namespace SearchEngine
     public class TermData
     {
         public string Term { get; set; }
-        public int RawFrequency { get; set; }
+        // How many times the term appeared in all documents
+        public int CollectionFrequency;
+        // In how many documents the term appeared.
+        public int DocumentFrequency;
         int PostingFileName { get; set; }
         public int PtrToFile { get; set; }
 
-        public TermData(string term, int rawFrequency, int fileName, int ptrToPostingFile)
+        public TermData(string term,int documentFrequncy, int collectionFrequency, int fileName, int ptrToPostingFile)
         {
             Term = term;
-            RawFrequency = rawFrequency;
+            DocumentFrequency = documentFrequncy;
+            CollectionFrequency = collectionFrequency;
             PtrToFile = ptrToPostingFile;
             PostingFileName = fileName;
         }
         public override string ToString()
         {
-            return string.Format("{0}\t{1}\t{2}\t{3}", Term, RawFrequency, PostingFileName, PtrToFile);
+            return string.Format("{0}\t{1}\t{2}\t{3}\t(4)", Term,DocumentFrequency, CollectionFrequency, PostingFileName, PtrToFile);
         }
     }
 }

@@ -6,7 +6,10 @@ namespace SearchEngine
     {
         public string Term { get; set; }
         private static char Delimiter = '~';
-        public int AmountOfTotalFrequencies;
+        // How many times the term appeared in documents
+        public int CollectionFrequency;
+        // In how many documents the term appeared.
+        public int DocumentFrequency;
         private string frequenciesInDocuments;
         public string FrequenciesInDocuments { get { return frequenciesInDocuments; }  }
         private int postingFileName;
@@ -35,24 +38,26 @@ namespace SearchEngine
             }
         }
 
-        public TermFrequency(string term, string documentNumner, int amountOfFtrequncies)
+        public TermFrequency(string term, string documentNumner, int collectionFrequency)
         {
             Term = term;
-            frequenciesInDocuments = string.Format("{0} {1}", documentNumner, amountOfFtrequncies);
-            AmountOfTotalFrequencies += amountOfFtrequncies;
+            DocumentFrequency = 1;
+            frequenciesInDocuments = string.Format("{0} {1}", documentNumner, collectionFrequency);
+            CollectionFrequency += collectionFrequency;
         }
 
         public void AddFrequencyInDocument(string documentNumner, int amountOfFtrequncies)
         {
             frequenciesInDocuments = frequenciesInDocuments + string.Format("\t{0} {1}", documentNumner, amountOfFtrequncies);
             
-            AmountOfTotalFrequencies += amountOfFtrequncies;
+            CollectionFrequency += amountOfFtrequncies;
+            DocumentFrequency++;
 
 
         }
 
         public override string ToString() {
-            string res = string.Format("{0}{1}{2}{1}{3}", Term, Delimiter, AmountOfTotalFrequencies, frequenciesInDocuments);
+            string res = string.Format("{0}{1}{2}{1}{3}", Term, Delimiter, CollectionFrequency, frequenciesInDocuments);
             return res;
 
 
