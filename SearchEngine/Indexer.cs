@@ -308,7 +308,6 @@ namespace SearchEngine
 
         public void LoadMainDictionaryFromMemory()
         {
-            progress = 0;
             status = "Reading main dictionary data file";
             var formatter = new BinaryFormatter();
             string fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileName;
@@ -325,12 +324,11 @@ namespace SearchEngine
             lastRowWrittenInFile = dictionaryData._lastRowWrittenInFile;
             //MainDictionary = dictionaryData._mainDictionary;
             status = "Merging sub-dictionaries to main dictionary";
-            progress = 0.75;
             MergeSplittedDictionaries();
             DocLanguages = dictionaryData._docLanguages;
             _documnentsData = dictionaryData._docData;
             status = "Done";
-            progress = 1;
+            NotifyPropertyChanged("LoadComplete");
         }
 
         [Serializable]

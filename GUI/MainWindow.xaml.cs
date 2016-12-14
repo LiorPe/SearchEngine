@@ -221,10 +221,20 @@ namespace GUI
             else
                 stemming = false;
             dest = destPath.Text;
-            idx = new Indexer(dest, dest,Mode.Load);
+            idx = new Indexer(dest, dest, Mode.Load);
             hasIndex = true;
-            idx.LoadMainDictionaryFromMemory();
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += _Load_Click;
+            worker.RunWorkerAsync();
+            IndeterminateProgressWindow ipWin = new IndeterminateProgressWindow(ref idx);
+            ipWin.ShowDialog();
             Lang.ItemsSource = idx.DocLanguages;
+        }
+
+        private void _Load_Click(object sender, DoWorkEventArgs e)
+        {
+            idx.LoadMainDictionaryFromMemory();
         }
         public string src_path
         {

@@ -1,0 +1,22 @@
+﻿<Window x:Class="GUI.IndeterminateProgressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GUI"
+        mc:Ignorable="d"
+        Title="Loading dictionary..." Height="100" Width="500"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.1*"/>
+            <RowDefinition Height="0.30*"/>
+            <RowDefinition Height="0.1*"/>
+            <RowDefinition Height="0.30*"/>
+            <RowDefinition Height="0.1*"/>
+        </Grid.RowDefinitions>
+        <ProgressBar Name="pBarI" Grid.Row="1" IsIndeterminate="True"></ProgressBar>
+        <TextBlock x:Name="statusTB" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Status}"></TextBlock>
+    </Grid>
+</Window>
