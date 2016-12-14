@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace SearchEngine
 {
@@ -31,7 +32,9 @@ namespace SearchEngine
         int charIntervalForPostingFile;
         const int minCharValue = '-';
         public ObservableCollection<TermData> MainDictionary;
-        public const string MainDictionaryFileName = "MainDictionary.zip";
+        public const string MainDictionaryFileNameStemming = "MainDictionaryStemming.zip";
+        public const string MainDictionaryFileNameWithoutStemming = "MainDictionaryWithoutStemming.zip";
+
 
         // for showing progress:
         public event PropertyChangedEventHandler PropertyChanged;
@@ -144,7 +147,7 @@ namespace SearchEngine
             ExtractLanguages();
             status = "Saving dictionary to file";
 
-            SaveMainDictionaryToMemory();
+            SaveMainDictionaryToMemory(useStemming);
             progress = 1;
         }
 
@@ -155,10 +158,6 @@ namespace SearchEngine
             foreach (DocumentData docData in _documnentsData.Values)
             {
                 string language = docData.Language;
-                if (language != String.Empty)
-                {
-                    language = language;
-                }
                 if (language!=String.Empty && !languages.Contains(language))
                     languages.Add(language);
             }
@@ -284,18 +283,30 @@ namespace SearchEngine
             File.WriteAllLines(sortedDest, mainDictionaryFile);
         }
 
-        public void SaveMainDictionaryToMemory()
+        public void SaveMainDictionaryToMemory(bool useStemming)
         {
             var formatter = new BinaryFormatter();
-            string fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileName;
-            System.IO.File.Delete(fullPath);
-            DictionaryData dictionaryData = new DictionaryData(this);
-            using (var outputFile = new FileStream(fullPath, FileMode.CreateNew))
-            using (var compressionStream = new GZipStream(outputFile, CompressionMode.Compress))
+            string fullPath;
+            if (useStemming)
+                fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameStemming;
+            else
+                fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameWithoutStemming;
+            try
             {
-                formatter.Serialize(compressionStream, dictionaryData);
-                compressionStream.Flush();
+                System.IO.File.Delete(fullPath);
+                DictionaryData dictionaryData = new DictionaryData(this);
+                using (var outputFile = new FileStream(fullPath, FileMode.CreateNew))
+                using (var compressionStream = new GZipStream(outputFile, CompressionMode.Compress))
+                {
+                    formatter.Serialize(compressionStream, dictionaryData);
+                    compressionStream.Flush();
+                }
             }
+            catch
+            {
+                return;
+            }
+
         }
 
 
@@ -306,21 +317,32 @@ namespace SearchEngine
             return Math.Max(Math.Min(ans, NumOfPostingFiles - 1), 0);
         }
 
-        public void LoadMainDictionaryFromMemory()
+        public bool LoadMainDictionaryFromMemory(bool useStemming)
         {
+            string fullPath;
+            if (useStemming)
+                fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameStemming;
+            else
+                fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameWithoutStemming;
             progress = 0;
             status = "Reading main dictionary data file";
             var formatter = new BinaryFormatter();
-            string fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileName;
             DictionaryData dictionaryData;
-
-            using (var outputFile = new FileStream(fullPath, FileMode.Open))
-            using (var compressionStream = new GZipStream(
-                                     outputFile, CompressionMode.Decompress))
+            try
             {
-                dictionaryData = (DictionaryData)formatter.Deserialize(compressionStream);
-                compressionStream.Flush();
+                using (var outputFile = new FileStream(fullPath, FileMode.Open))
+                using (var compressionStream = new GZipStream(
+                                         outputFile, CompressionMode.Decompress))
+                {
+                    dictionaryData = (DictionaryData)formatter.Deserialize(compressionStream);
+                    compressionStream.Flush();
+                }
             }
+            catch
+            {
+                return false;
+            }
+
             splittedMainDictionary = dictionaryData._splittedMainDictionary;
             lastRowWrittenInFile = dictionaryData._lastRowWrittenInFile;
             //MainDictionary = dictionaryData._mainDictionary;
@@ -331,6 +353,34 @@ namespace SearchEngine
             _documnentsData = dictionaryData._docData;
             status = "Done";
             progress = 1;
+            return true;
+        }
+
+        public void WriteToXmlFile()
+        {
+            TermData[] TermsSortedByRank = MainDictionary.ToArray();
+            Array.Sort(TermsSortedByRank, (term1, term2) => term2.CollectionFrequency.CompareTo(term1.CollectionFrequency));
+
+            using (XmlWriter writer = XmlWriter.Create("SortedTerms.xml"))
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("Terms");
+                int ranking = 1;
+                foreach (TermData term in TermsSortedByRank)
+                {
+                    writer.WriteStartElement("Term");
+
+                    writer.WriteElementString("Term", term.Term);
+                    writer.WriteElementString("Ranking", ranking.ToString());
+                    writer.WriteElementString("logRanking", Math.Log10(ranking).ToString());
+                    writer.WriteElementString("CF", term.CollectionFrequency.ToString());
+                    writer.WriteElementString("DF", term.DocumentFrequency.ToString());
+                    ranking++;
+                    writer.WriteEndElement();
+                }
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+            }
         }
 
         [Serializable]
