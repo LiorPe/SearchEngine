@@ -199,7 +199,7 @@ namespace GUI
 
         private void Show_Click(object sender, RoutedEventArgs e)
         {
-            if (!hasIndex)
+            if (!hasIndex || !loadSuccess)
             {
                 System.Windows.MessageBox.Show("Please start the indexing or load a dictionary first.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
