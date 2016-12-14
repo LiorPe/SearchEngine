@@ -54,7 +54,7 @@ namespace ConsoleTest
         public static void LoadIndexFromMemory(out Indexer indexer)
         {
             indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles",Mode.Load);
-            indexer.LoadMainDictionaryFromMemory();
+            indexer.LoadMainDictionaryFromMemory(false);
         }
         public static void DerivationLaws(string s)
         {
