@@ -178,21 +178,21 @@ namespace GUI
             if (dest[dest.Length - 1] == '\\')
                 target = dest;
             else target = dest + '\\';
-            if (File.Exists(target + "MainDictionary.zip"))
-                File.Delete(target + "MainDictionary.zip");
-            if (File.Exists(target + "SortedDictionary.txt"))
-                File.Delete(target + "SortedDictionary.txt");
-            Boolean stop = false;
-            int i = 0;
-            while (!stop)
+            DirectoryInfo d = new DirectoryInfo(target);
+            FileInfo[] Files = d.GetFiles();
+            foreach (FileInfo file in Files)
             {
-                if (File.Exists(target + i + ".txt"))
+                try
                 {
-                    File.Delete(target + i + ".txt");
-                    i++;
+                    if(file.Name != "MainDictionary.zip")
+                        File.Delete(target + file.Name);
                 }
-                else stop = true;
+                catch
+                {
+
+                }
             }
+            
         }
 
         private void Show_Click(object sender, RoutedEventArgs e)
