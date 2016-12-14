@@ -8,10 +8,10 @@ namespace SearchEngine
     {
         public string Term { get; set; }
         // How many times the term appeared in all documents
-        public int CollectionFrequency;
+        public int CollectionFrequency { get; set; }
         // In how many documents the term appeared.
-        public int DocumentFrequency;
-        int PostingFileName { get; set; }
+        public int DocumentFrequency { get; set; }
+        public int PostingFileName { get; set; }
         public int PtrToFile { get; set; }
 
         public TermData(string term,int documentFrequncy, int collectionFrequency, int fileName, int ptrToPostingFile)
