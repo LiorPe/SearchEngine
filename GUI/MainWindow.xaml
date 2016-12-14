@@ -38,10 +38,6 @@
         <Button x:Name="Load" Grid.Column="1" Grid.Row="9" Click="Show_Click" MinWidth="80" MinHeight="20">Show Dictionary</Button>
         <Label Grid.Column="1" Grid.Row="6">Select document language:</Label>
         <ComboBox x:Name="Lang" Grid.Column="1" Grid.Row="7">
-            <ComboBoxItem IsSelected="True">Language 1</ComboBoxItem>
-            <ComboBoxItem>Language 2</ComboBoxItem>
-            <ComboBoxItem>Language 3</ComboBoxItem>
-            <ComboBoxItem>Language 4</ComboBoxItem>
         </ComboBox>
         <CheckBox x:Name="stemCheck" Grid.Column="1" Grid.Row="5" IsChecked="True" VerticalAlignment="Center" MinWidth="80" Margin="0,6">Enable Stemming (Porter's algorithm)</CheckBox>
         <Label Grid.Column="1" Grid.Row="3">Enter destination path:</Label>

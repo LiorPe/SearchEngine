@@ -23,6 +23,7 @@ namespace GUI
         public DictionaryWindow(ref Indexer idx)
         {
             InitializeComponent();
+            DataContext = "idx";
             dgIndex.ItemsSource = idx.MainDictionary;
         }
 

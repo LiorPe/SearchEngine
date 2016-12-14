@@ -86,6 +86,7 @@ namespace GUI
             // Show statistics window
             StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
             sWin.ShowDialog();
+            Lang.ItemsSource = idx.DocLanguages;
         }
 
         private void _Start_Click(object sender, DoWorkEventArgs e)
@@ -164,6 +165,7 @@ namespace GUI
             stemming = true;
             stemCheck.IsChecked = true;
             //TODO: Delete posting files and dictionary here
+            Lang.ItemsSource = null;
             idx = null;
             hasIndex = false;
             Delete_Files();
@@ -222,6 +224,7 @@ namespace GUI
             idx = new Indexer(dest, dest,Mode.Load);
             hasIndex = true;
             idx.LoadMainDictionaryFromMemory();
+            Lang.ItemsSource = idx.DocLanguages;
         }
         public string src_path
         {
