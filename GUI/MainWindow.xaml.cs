@@ -86,6 +86,7 @@ namespace GUI
             // Show statistics window
             StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
             sWin.ShowDialog();
+            Lang.ItemsSource = idx.DocLanguages;
         }
 
         private void _Start_Click(object sender, DoWorkEventArgs e)
@@ -164,6 +165,7 @@ namespace GUI
             stemming = true;
             stemCheck.IsChecked = true;
             //TODO: Delete posting files and dictionary here
+            Lang.ItemsSource = null;
             idx = null;
             hasIndex = false;
             Delete_Files();
@@ -176,21 +178,21 @@ namespace GUI
             if (dest[dest.Length - 1] == '\\')
                 target = dest;
             else target = dest + '\\';
-            if (File.Exists(target + "MainDictionary.zip"))
-                File.Delete(target + "MainDictionary.zip");
-            if (File.Exists(target + "SortedDictionary.txt"))
-                File.Delete(target + "SortedDictionary.txt");
-            Boolean stop = false;
-            int i = 0;
-            while (!stop)
+            DirectoryInfo d = new DirectoryInfo(target);
+            FileInfo[] Files = d.GetFiles();
+            foreach (FileInfo file in Files)
             {
-                if (File.Exists(target + i + ".txt"))
+                try
                 {
-                    File.Delete(target + i + ".txt");
-                    i++;
+                    if(file.Name != "MainDictionary.zip")
+                        File.Delete(target + file.Name);
                 }
-                else stop = true;
+                catch
+                {
+
+                }
             }
+            
         }
 
         private void Show_Click(object sender, RoutedEventArgs e)
@@ -219,8 +221,19 @@ namespace GUI
             else
                 stemming = false;
             dest = destPath.Text;
-            idx = new Indexer(dest, dest,Mode.Load);
+            idx = new Indexer(dest, dest, Mode.Load);
             hasIndex = true;
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += _Load_Click;
+            worker.RunWorkerAsync();
+            IndeterminateProgressWindow ipWin = new IndeterminateProgressWindow(ref idx);
+            ipWin.ShowDialog();
+            Lang.ItemsSource = idx.DocLanguages;
+        }
+
+        private void _Load_Click(object sender, DoWorkEventArgs e)
+        {
             idx.LoadMainDictionaryFromMemory();
         }
         public string src_path

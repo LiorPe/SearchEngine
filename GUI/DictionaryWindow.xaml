@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="Dictionary" Height="600" Width="600"
+        Title="Dictionary" Height="600" Width="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Window.Resources>
@@ -28,8 +28,10 @@
         </Grid.RowDefinitions>
         <DataGrid x:Name="dgIndex" Grid.Row="0" AutoGenerateColumns="False"  ItemsSource="{Binding Path=MainDictionary}" Style="{DynamicResource DataGridStyle1}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header= "Term" Width="*"  Binding="{Binding Term}" FontSize="18"/>
-                <DataGridTextColumn Header="RawFrequency" Width="*"  Binding="{Binding RawFrequency}" FontSize="18"/>
+                <DataGridTextColumn Header="Term" Width="*" Binding="{Binding Term}" FontSize="18" IsReadOnly="True"/>
+                <DataGridTextColumn Header="PostingFile" Width="*" Binding="{Binding PostingFileName}" FontSize="18" IsReadOnly="True"/>
+                <DataGridTextColumn Header="RawFrequency" Width="*"  Binding="{Binding CollectionFrequency}" FontSize="18" IsReadOnly="True"/>
+                <DataGridTextColumn Header="DocumentFrequency" Width="*"  Binding="{Binding DocumentFrequency}" FontSize="18" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
         <Button x:Name="OK" Content="Close" Grid.Row="1" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Click="Close_Click" />
