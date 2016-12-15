@@ -70,6 +70,7 @@ namespace GUI
             worker.RunWorkerAsync();
             ProgressWindow pWin = new ProgressWindow(ref idx);
             pWin.ShowDialog();
+            loadSuccess = true;
             stopWatch.Stop();
 
             #region statistics
