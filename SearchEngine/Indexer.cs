@@ -326,7 +326,6 @@ namespace SearchEngine
             foreach (Dictionary<string, TermData> dict in splittedMainDictionary)
                 totoalEntriesInDictionary += dict.Count();
             TermData[] allTerms = new TermData[totoalEntriesInDictionary];
-            string[] mainDictionaryFile = new string[totoalEntriesInDictionary];
             int index = 0;
 
             foreach (Dictionary<string, TermData> dict in splittedMainDictionary)
@@ -335,16 +334,11 @@ namespace SearchEngine
                 foreach (TermData term in sortedDictionary)
                 {
                     allTerms[index] = term;
-                    mainDictionaryFile[index] = term.ToString();
                     index++;
                 }
             }
             MainDictionary = new ObservableCollection<TermData>(allTerms);
-            string sortedDest;
-            if (_mainDictionaryFilePath[_mainDictionaryFilePath.Length - 1] == '\\')
-                sortedDest = _mainDictionaryFilePath + "SortedDictionary.txt";
-            else sortedDest = _mainDictionaryFilePath + "\\SortedDictionary.txt";
-            File.WriteAllLines(sortedDest, mainDictionaryFile);
+
         }
 
         public void SaveMainDictionaryToMemory(bool useStemming)
