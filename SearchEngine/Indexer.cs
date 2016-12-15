@@ -149,6 +149,7 @@ namespace SearchEngine
 
             SaveMainDictionaryToMemory(useStemming);
             progress = 1;
+            
         }
 
         //Find all languages exist in documents datas

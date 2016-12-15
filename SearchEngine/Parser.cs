@@ -341,24 +341,24 @@ namespace SearchEngine
                 countFrequenciesSeperately = true;
                 return false;
             }
-            else if (splittedToken.Length==2 && splittedToken.All(s => s != String.Empty)&& (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue,out suffix,out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)))
-            {
-                int recursiveFileIndexer = 0;
-                MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
-                if (recursiveFileIndexer < splittedToken.Length)
-                {
-                    IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
-                    tokenRecursivelyParsed = true;
-                    return false;
-                }
-            }
+            //else if (splittedToken.Length==2 && splittedToken.All(s => s != String.Empty)&& (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue,out suffix,out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)))
+            //{
+            //    int recursiveFileIndexer = 0;
+            //    MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
+            //    if (recursiveFileIndexer < splittedToken.Length)
+            //    {
+            //        IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+            //        tokenRecursivelyParsed = true;
+            //        return false;
+            //    }
+            //}
             // if 3 words connected by - (word-word-word)
-            else if ((splittedToken = token.Split('-')).Length == 3 && splittedToken.All(s => s!=String.Empty)&& splittedToken[0].All(Char.IsLetter) && splittedToken[1].All(Char.IsLetter) && splittedToken[2].All(Char.IsLetter))
+            else if ((splittedToken = token.Split('-')).Length == 3 && splittedToken.All(s => s != String.Empty) && splittedToken[0].All(Char.IsLetter) && splittedToken[1].All(Char.IsLetter) && splittedToken[2].All(Char.IsLetter))
             {
                 countFrequenciesSeperately = true;
                 return false;
             }
-            else if (splittedToken.Length == 3 && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue, out suffix, out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)) && (splittedToken[2].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[2], out numericValue, out suffix, out prefix)))
+            else if (splittedToken.All(s => (s == String.Empty || s.All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref s, out numericValue, out suffix, out prefix) )))
             {
                 int recursiveFileIndexer = 0;
                 MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
@@ -369,6 +369,17 @@ namespace SearchEngine
                     return false;
                 }
             }
+            //else if (splittedToken.Length == 3 && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue, out suffix, out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)) && (splittedToken[2].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[2], out numericValue, out suffix, out prefix)))
+            //{
+            //    int recursiveFileIndexer = 0;
+            //    MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
+            //    if (recursiveFileIndexer < splittedToken.Length)
+            //    {
+            //        IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+            //        tokenRecursivelyParsed = true;
+            //        return false;
+            //    }
+            //}
             // if  initials (u.s.a -> usa)
             else if ((splittedToken = token.Split('.')).Length > 1 && splittedToken.All(s => s.Length == 1 && Char.IsLetter(s[0])))
             {
@@ -381,7 +392,7 @@ namespace SearchEngine
 
             }
             // if has possesive s in the end -> (lior`s apple -> lior-apple)
-            else if ( (token.IndexOf("'s")==token.Length-2 && token.IndexOf("'s")>=0) || (token.IndexOf("`s") == token.Length - 2 && token.IndexOf("`s") >= 0) )
+            else if ((token.IndexOf("'s") == token.Length - 2 && token.IndexOf("'s") >= 0) || (token.IndexOf("`s") == token.Length - 2 && token.IndexOf("`s") >= 0))
             {
                 int endOfToken = Math.Max(token.IndexOf("'s"), token.IndexOf("`s"));
                 token = token.Substring(0, endOfToken);
@@ -401,7 +412,7 @@ namespace SearchEngine
                         token = String.Format("{0}-{1}", token, nextToken);
                         countFrequenciesSeperately = true;
                     }
-                    
+
 
                 }
             }
