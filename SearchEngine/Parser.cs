@@ -19,7 +19,7 @@ namespace SearchEngine
         private readonly static char[] SuffixToRemove = { '-', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '>', ',', '.', ':','\t','\b' };
         private readonly static char[] prefixToRemove = { '|', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', ',', '.', '%', '-', ':', '\t', '\b' };
         private readonly static char[] delimiters = { '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '<', '>', ',', '-', '.', ':','|', '\t', '\b' };
-        private static readonly Dictionary<string, string> monthes = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> months = new Dictionary<string, string>
         {
             {"january","01" },
             {"february","02" },
@@ -33,6 +33,17 @@ namespace SearchEngine
             {"october","10" },
             {"november","11" },
             {"december","12" },
+            {"jan","01" },
+            {"feb","02" },
+            {"mar","03" },
+            {"apr","04" },
+            {"may","05" },
+            {"jul","07" },
+            {"aug","08" },
+            {"sep","09" },
+            {"oct","10" },
+            {"nov","11" },
+            {"dec","12" },
         };
 
         private static readonly Dictionary<string, double> largeNumbers = new Dictionary<string, double>
@@ -443,7 +454,7 @@ namespace SearchEngine
         private static void ActivateDerivationLawsForWords(ref string token, string[] file, ref int fileIndexer,ref bool countFrequenciesSeperately)
         {
             // if it`s a date
-            if (monthes.ContainsKey(token) && fileIndexer + 1 < file.Length)
+            if (months.ContainsKey(token) && fileIndexer + 1 < file.Length)
             {
                 int value;
                 file[fileIndexer + 1] = NormalizeToken(file[fileIndexer + 1]);
@@ -460,7 +471,7 @@ namespace SearchEngine
                     //if it represents year
                     else
                     {
-                        token = value + "-" + monthes[token];
+                        token = value + "-" + months[token];
                         fileIndexer++;
                     }
 
@@ -488,9 +499,9 @@ namespace SearchEngine
                 nextToken = NormalizeToken(file[fileIndexer] + 1);
 
             //if represents a date
-            if (numericValue <= 31 && monthes.ContainsKey(nextToken))
+            if (numericValue <= 31 && months.ContainsKey(nextToken))
             {
-                token = monthes[nextToken] + "-" + numericValue;
+                token = months[nextToken] + "-" + numericValue;
                 fileIndexer++;
                 // Check if next word is a year
                 int year = 0;

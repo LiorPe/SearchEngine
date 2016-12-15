@@ -105,6 +105,8 @@ namespace SearchEngine
             }
             int amountOfFiles = allFileEntries.Count;
             string[][] docFilesNames;
+            if (amountOfFiles < ParserFactor)
+                ParserFactor = amountOfFiles;
             if (amountOfFiles % ParserFactor == 0)
                 docFilesNames = new string[amountOfFiles / ParserFactor][];
             else
@@ -185,6 +187,7 @@ namespace SearchEngine
 
             foreach (FileInfo file in di.GetFiles())
             {
+                if(file.Name != MainDictionaryFileNameStemming && file.Name != MainDictionaryFileNameWithoutStemming)
                 file.Delete();
             }
             string fullPostingFilesPath;
