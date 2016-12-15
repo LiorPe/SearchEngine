@@ -76,10 +76,10 @@ namespace SearchEngine
         private Dictionary<string, DocumentData> _documnentsData = new Dictionary<string, DocumentData>();
         #region Inits
 
-        public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
+        public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode, int parserFactor=10, int numOfPostiongFiles = 10)
         {
-            NumOfPostingFiles = 10;
-            ParserFactor = 10;
+            NumOfPostingFiles = numOfPostiongFiles;
+            ParserFactor = parserFactor;
             _destPostingFiles = destPostingFiles;
             charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
             _mainDictionaryFilePath = mainDictionaryFilePath;
