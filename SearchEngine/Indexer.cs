@@ -185,6 +185,7 @@ namespace SearchEngine
 
             foreach (FileInfo file in di.GetFiles())
             {
+                if(file.Name != MainDictionaryFileNameStemming && file.Name != MainDictionaryFileNameWithoutStemming)
                 file.Delete();
             }
             string fullPostingFilesPath;

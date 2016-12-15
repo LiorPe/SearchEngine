@@ -19,6 +19,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Windows.Threading;
 using System.ComponentModel;
+using System.Xml.Serialization;
+using System.Collections.ObjectModel;
+using System.Xml;
 
 namespace GUI
 {
@@ -115,8 +118,6 @@ namespace GUI
                 stopwords = src + "stop_words.txt";
             else stopwords = src + "\\stop_words.txt";
             idx.IndexCorpus(src, stopwords, stemming);
-
-            
         }
 
         private void ShowProgress()
@@ -243,7 +244,36 @@ namespace GUI
         private void _Load_Click(object sender, DoWorkEventArgs e)
         {
             loadSuccess = idx.LoadMainDictionaryFromMemory(stemming);
+
+            //saveXML();
         }
+
+        private void saveXML()
+        {
+            string target;
+            if (dest[dest.Length - 1] == '\\')
+                target = dest + "data.xml";
+            else target = dest + "\\data.xml";
+            using (XmlWriter writer = XmlWriter.Create(target))
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("Terms");
+
+                foreach (TermData t in idx.MainDictionary)
+                {
+                    writer.WriteStartElement("Term");
+
+                    writer.WriteElementString("Term", t.Term);
+                    writer.WriteElementString("CollectionFrequency", t.CollectionFrequency.ToString());
+
+                    writer.WriteEndElement();
+                }
+
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+            }
+        }
+
         public string src_path
         {
             get { return srcPath.Text; }
