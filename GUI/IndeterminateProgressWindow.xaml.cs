@@ -37,11 +37,8 @@ namespace GUI
                     this.Dispatcher.Invoke(() =>
                     {
                         statusTB.Text = ((Indexer)sender).status;
-                    });
-                if (e.PropertyName == "LoadComplete")
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        Close();
+                        if (index.status == "Done")
+                            Close();
                     });
             };
         }

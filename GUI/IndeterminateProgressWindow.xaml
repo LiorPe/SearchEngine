@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="Loading dictionary..." Height="100" Width="500"
+        Title="Loading dictionary..." Height="200" Width="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Grid>
@@ -17,6 +17,6 @@
             <RowDefinition Height="0.1*"/>
         </Grid.RowDefinitions>
         <ProgressBar Name="pBarI" Grid.Row="1" IsIndeterminate="True"></ProgressBar>
-        <TextBlock x:Name="statusTB" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Status}"></TextBlock>
+        <TextBlock x:Name="statusTB" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Status}" FontSize="18"></TextBlock>
     </Grid>
 </Window>

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="StatisticsWindow" Height="200" Width="300"
+        Title="StatisticsWindow" Height="400" Width="600"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Grid>
@@ -21,13 +21,13 @@
             <ColumnDefinition Width="0.7*" />
             <ColumnDefinition Width="0.3*" />
         </Grid.ColumnDefinitions>
-        <Label Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center">Inverted Index creation completed.</Label>
-        <Label Grid.Row="2" VerticalAlignment="Center">Number of indexed documents:</Label>
-        <TextBlock x:Name="docsTB" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center"></TextBlock>
-        <Label Grid.Row="3" VerticalAlignment="Center">Numbre of unique terms identified:</Label>
-        <TextBlock x:Name="termsTB" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center"></TextBlock>
-        <Label Grid.Row="4" VerticalAlignment="Center">Total runtime:</Label>
-        <TextBlock x:Name="timeTB" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center"></TextBlock>
-        <Button x:Name="OK" Content="Close" Grid.Row="5" Grid.ColumnSpan="2" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Click="OK_Click" />
+        <Label Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center" FontSize="18">Inverted Index creation completed.</Label>
+        <Label Grid.Row="2" VerticalAlignment="Center" FontSize="18">Number of indexed documents:</Label>
+        <TextBlock x:Name="docsTB" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" FontSize="18"></TextBlock>
+        <Label Grid.Row="3" VerticalAlignment="Center" FontSize="18">Numbrer of unique terms identified:</Label>
+        <TextBlock x:Name="termsTB" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" FontSize="18"></TextBlock>
+        <Label Grid.Row="4" VerticalAlignment="Center" FontSize="18">Total runtime:</Label>
+        <TextBlock x:Name="timeTB" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" FontSize="18"></TextBlock>
+        <Button x:Name="OK" Content="Close" Grid.Row="5" Grid.ColumnSpan="2" Width="75" HorizontalAlignment="Center" VerticalAlignment="Center" Click="OK_Click" FontSize="18"/>
     </Grid>
 </Window>

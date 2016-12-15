@@ -45,9 +45,6 @@ namespace GUI
             src = "";
             ResizeMode = ResizeMode.NoResize;
             loadSuccess = false;
-            // for Lior
-            srcPath.Text= @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus";
-            destPath.Text = @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles";
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
@@ -152,7 +149,7 @@ namespace GUI
                 if (dest[dest.Length - 1] == '\\')
                     target = dest;
                 else target = dest + '\\';
-                if (!File.Exists(target + "MainDictionary.zip"))
+                if (!File.Exists(target + "MainDictionaryStemming.zip") && !File.Exists(target + "MainDictionaryWithoutStemming.zip"))
                     return false;
                 return System.IO.Directory.Exists(dest);
             }
