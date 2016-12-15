@@ -105,6 +105,8 @@ namespace SearchEngine
             }
             int amountOfFiles = allFileEntries.Count;
             string[][] docFilesNames;
+            if (amountOfFiles < ParserFactor)
+                ParserFactor = amountOfFiles;
             if (amountOfFiles % ParserFactor == 0)
                 docFilesNames = new string[amountOfFiles / ParserFactor][];
             else
