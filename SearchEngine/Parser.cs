@@ -71,7 +71,7 @@ namespace SearchEngine
 
                     IterateTokens(ref fileIndexer, file, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     documentsData[docNo] = new DocumentData(docNo, mostFrequentTerm, frquenciesOfMostFrequentTerm, termFrequencies.Keys.Count, docLanguage, documentLength);
-                    UpdatePostingFile(termFrequencies, postingFile, docNo);
+                    UpdateTermsExistInDocument(termFrequencies, postingFile, docNo);
 
 
 
@@ -101,7 +101,7 @@ namespace SearchEngine
                     if (!tokenRecursivelyParsed && !IsAStopWord(token))
                     {
                         documentLength++;
-                        UpdateFrequencies(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                        UpdateTermsFrequenciesInOneDocument(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                         if (countFrequenciesSeperately )
                         {
 
@@ -109,7 +109,7 @@ namespace SearchEngine
                             foreach (string subtoken in splittedToken)
                             {
                                 if (subtoken!=String.Empty && !StopWords.Contains(NormalizeToken(subtoken)))
-                                    UpdateFrequencies(subtoken, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                                    UpdateTermsFrequenciesInOneDocument(subtoken, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                             }
                         }
                     }
@@ -120,32 +120,22 @@ namespace SearchEngine
             } while (!ReachedTODocumentEnd(file, fileIndexer));
         }
 
-        private static void UpdatePostingFile(Dictionary<string, int> termFrequencies, Dictionary<string, TermFrequency> postingFile, string docNumber)
+        private static void UpdateTermsExistInDocument (Dictionary<string, int> termFrequencies, Dictionary<string, TermFrequency> termsFromPreviousDocuments, string docNumber)
         {
             foreach (string term in termFrequencies.Keys)
             {
-                if (postingFile.ContainsKey(term))
+                if (termsFromPreviousDocuments.ContainsKey(term))
                 {
-                    postingFile[term].AddFrequencyInDocument(docNumber, termFrequencies[term]);
+                    termsFromPreviousDocuments[term].AddFrequencyInDocument(docNumber, termFrequencies[term]);
                 }
                 else
                 {
-                    postingFile[term] = new TermFrequency(term, docNumber, termFrequencies[term]);
+                    termsFromPreviousDocuments[term] = new TermFrequency(term, docNumber, termFrequencies[term]);
                 }
 
             }
         }
 
-
-        private static void PrintOutputt(DocumentData documentData, Dictionary<string, int> termFrequencies)
-        {
-            Console.WriteLine("\"{0}\" is the most frequent term, and it appears {1} times. There are {2} unique terms, and its language is:{3}. Document`s length: {4}.", documentData.MostFrequentTerm, documentData.FrquenciesOfMostFrequentTerm, documentData.AmmountOfUniqueTerms, documentData.Language, documentData.DocumentLength);
-            Console.WriteLine("Press Enter to continue.");
-            Console.ReadLine();
-            foreach (string term in termFrequencies.Keys)
-                Console.WriteLine(String.Format("{0} , {1}", term, termFrequencies[term]));
-
-        }
 
         private static void MoveIndexToNextToken(ref int fileIndexer, string[] file)
         {
@@ -159,7 +149,7 @@ namespace SearchEngine
             StopWords = new HashSet<string>(stopWords);
         }
 
-        private static void UpdateFrequencies(string term, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
+        private static void UpdateTermsFrequenciesInOneDocument(string term, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
         {
             if (!termFrequencies.ContainsKey(term))
                 termFrequencies[term] = 1;
@@ -341,17 +331,8 @@ namespace SearchEngine
                 countFrequenciesSeperately = true;
                 return false;
             }
-            //else if (splittedToken.Length==2 && splittedToken.All(s => s != String.Empty)&& (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue,out suffix,out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)))
-            //{
-            //    int recursiveFileIndexer = 0;
-            //    MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
-            //    if (recursiveFileIndexer < splittedToken.Length)
-            //    {
-            //        IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
-            //        tokenRecursivelyParsed = true;
-            //        return false;
-            //    }
-            //}
+
+
             // if 3 words connected by - (word-word-word)
             else if ((splittedToken = token.Split('-')).Length == 3 && splittedToken.All(s => s != String.Empty) && splittedToken[0].All(Char.IsLetter) && splittedToken[1].All(Char.IsLetter) && splittedToken[2].All(Char.IsLetter))
             {
@@ -369,17 +350,8 @@ namespace SearchEngine
                     return false;
                 }
             }
-            //else if (splittedToken.Length == 3 && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[0], out numericValue, out suffix, out prefix)) && (splittedToken[1].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[1], out numericValue, out suffix, out prefix)) && (splittedToken[2].All(Char.IsLetter) || ExtractNumericValueAndSuffix(ref splittedToken[2], out numericValue, out suffix, out prefix)))
-            //{
-            //    int recursiveFileIndexer = 0;
-            //    MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
-            //    if (recursiveFileIndexer < splittedToken.Length)
-            //    {
-            //        IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
-            //        tokenRecursivelyParsed = true;
-            //        return false;
-            //    }
-            //}
+
+
             // if  initials (u.s.a -> usa)
             else if ((splittedToken = token.Split('.')).Length > 1 && splittedToken.All(s => s.Length == 1 && Char.IsLetter(s[0])))
             {

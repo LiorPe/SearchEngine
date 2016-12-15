@@ -21,16 +21,5 @@ namespace SearchEngine
                 return null;
             }
         }
-        public static string[] ReadUtfFile(string path)
-        {
-            if (File.Exists(path))
-            {
-                return File.ReadAllLines(path);
-            }
-            else
-            {
-                return null;
-            }
-        }
     }
 }
