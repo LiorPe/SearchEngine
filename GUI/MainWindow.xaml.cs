@@ -244,7 +244,6 @@ namespace GUI
         private void _Load_Click(object sender, DoWorkEventArgs e)
         {
             loadSuccess = idx.LoadMainDictionaryFromMemory(stemming);
-
             //saveXML();
         }
 
