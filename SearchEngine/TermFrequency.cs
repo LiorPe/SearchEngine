@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace SearchEngine
 {
@@ -48,6 +50,7 @@ namespace SearchEngine
 
         public void AddFrequencyInDocument(string documentNumner, int amountOfFtrequncies)
         {
+        
             frequenciesInDocuments = frequenciesInDocuments + string.Format("\t{0} {1}", documentNumner, amountOfFtrequncies);
             
             CollectionFrequency += amountOfFtrequncies;
@@ -65,6 +68,7 @@ namespace SearchEngine
 
         public static string AddFrequenciesToString(string sourceFrequencies, string freqToAdd)
         {
+
             return sourceFrequencies += '\t' + freqToAdd;
 
         }
