@@ -253,20 +253,13 @@ namespace SearchEngine
                     return;
                 }
                 int fileCursor = 0;
-                bool endOfFile;
                 string sourcePostingFileEntry = null;
                 using (BinaryReader sourcePostingFile = new BinaryReader(File.Open(duplicatePostingFileDestPath, FileMode.Open)))
                 {
                     using (BinaryWriter targetPostingFile = new BinaryWriter(File.Create(postfileDestPath)))
                     {
-                        endOfFile = false;
                         while (i < size && (termToIndex = termsToIndex[i]).PostingFileName == fileName)
                         {
-                            //to remove
-                            if (i==2755)
-                            {
-                                i = i;
-                            }
                             int rowToUpdate = termToIndex.RowInPostFile;
                             while (sourcePostingFile.BaseStream.Position != sourcePostingFile.BaseStream.Length & fileCursor < rowToUpdate)
                             {
@@ -297,29 +290,6 @@ namespace SearchEngine
                 File.Delete(duplicatePostingFileDestPath);
             }
 
-            //    string[] postingFile = FileReader.ReadUtfFile(postfileDestPath);
-            //    int sizeOfPostingFile = postingFile.Length;
-
-            //    int lastTermInSameFileIndex = i;
-            //    for (; lastTermInSameFileIndex < size - 1 && termsToIndex[lastTermInSameFileIndex + 1].PostingFileName == fileName; lastTermInSameFileIndex++) ;
-
-            //    if (termsToIndex[lastTermInSameFileIndex].RowInPostFile >= postingFile.Length)
-            //        Array.Resize<string>(ref postingFile, termsToIndex[lastTermInSameFileIndex].RowInPostFile + 1);
-            //    for (int j = i; j <= lastTermInSameFileIndex; j++)
-            //    {
-            //        termToIndex = termsToIndex[j];
-            //        if (postingFile[termToIndex.RowInPostFile] == null)
-            //            postingFile[termToIndex.RowInPostFile] = termToIndex.FrequenciesInDocuments;
-            //        else
-            //        {
-            //            TermFrequency.AddFrequenciesToString(postingFile[termToIndex.RowInPostFile], termToIndex.FrequenciesInDocuments);
-            //        }
-            //    }
-            //    File.WriteAllLines(postfileDestPath, postingFile);
-            //    i = lastTermInSameFileIndex + 1;
-
-
-            //}
         }
 
         public void MergeSplittedDictionaries()
