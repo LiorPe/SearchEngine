@@ -28,9 +28,9 @@ namespace SearchEngine
         string _destPostingFiles;
         string _mainDictionaryFilePath;
 
-        int charValuesRange = 'z' - '-' + 1;
+        int charValuesRange = 'z' -'a' + 1;
         int charIntervalForPostingFile;
-        const int minCharValue = '-';
+        const int minCharValue = 'a';
         public ObservableCollection<TermData> MainDictionary;
         public const string MainDictionaryFileNameStemming = "MainDictionaryStemming.zip";
         public const string MainDictionaryFileNameWithoutStemming = "MainDictionaryWithoutStemming.zip";
@@ -78,8 +78,8 @@ namespace SearchEngine
 
         public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode)
         {
-            NumOfPostingFiles = 2;
-            ParserFactor = 4;
+            NumOfPostingFiles = 10;
+            ParserFactor = 10;
             _destPostingFiles = destPostingFiles;
             charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
             _mainDictionaryFilePath = mainDictionaryFilePath;
@@ -139,7 +139,7 @@ namespace SearchEngine
                 status = String.Format("Indexing files: {0}", filesBeingProccessed);
                 IndexParsedTerms(termsFrequencies);
                 progress = (double)(i+1) / (double)(size+1);
-                Console.WriteLine("{0} , {1}", status, progress);
+                //Console.WriteLine("{0} , {1}", status, progress);
             }
             status = "Merging main dictionary"; 
             MergeSplittedDictionaries();
@@ -180,6 +180,12 @@ namespace SearchEngine
         {
             if (!Directory.Exists(_destPostingFiles))  // if it doesn't exist, create
                 Directory.CreateDirectory(_destPostingFiles);
+            System.IO.DirectoryInfo di = new DirectoryInfo(_destPostingFiles);
+
+            foreach (FileInfo file in di.GetFiles())
+            {
+                file.Delete();
+            }
             string fullPostingFilesPath;
             for (int i = 0; i < NumOfPostingFiles; i++)
             {
@@ -242,40 +248,43 @@ namespace SearchEngine
                 catch
                 {
                     File.Delete(duplicatePostingFileDestPath);
-                    throw new Exception();
+                    return;
                 }
                 int fileCursor = 0;
                 bool endOfFile;
                 string sourcePostingFileEntry = null;
-                using (StreamReader sourcePostingFile = new StreamReader(duplicatePostingFileDestPath))
+                using (BinaryReader sourcePostingFile = new BinaryReader(File.Open(duplicatePostingFileDestPath, FileMode.Open)))
                 {
-                    using (StreamWriter targetPostingFile = File.CreateText(postfileDestPath))
+                    using (BinaryWriter targetPostingFile = new BinaryWriter(File.Create(postfileDestPath)))
                     {
                         endOfFile = false;
                         while (i < size && (termToIndex = termsToIndex[i]).PostingFileName == fileName)
                         {
-
                             //to remove
-                            int rowToUpdate = termToIndex.RowInPostFile;
-                            while (!endOfFile & fileCursor < rowToUpdate)
+                            if (i==2755)
                             {
-                                sourcePostingFileEntry = sourcePostingFile.ReadLine();
-                                targetPostingFile.WriteLine(sourcePostingFileEntry);
-                                fileCursor++;
+                                i = i;
                             }
-                            if (!endOfFile)
-                                sourcePostingFileEntry = sourcePostingFile.ReadLine();
-                            if (endOfFile && sourcePostingFileEntry == null)
+                            int rowToUpdate = termToIndex.RowInPostFile;
+                            while (sourcePostingFile.BaseStream.Position != sourcePostingFile.BaseStream.Length & fileCursor < rowToUpdate)
                             {
-                                targetPostingFile.WriteLine(termToIndex.FrequenciesInDocuments);
-                                endOfFile = true;
+  
+                                    sourcePostingFileEntry = sourcePostingFile.ReadString();
+                                    targetPostingFile.Write(sourcePostingFileEntry);
+                                    fileCursor++;
+                                
+
+                            }
+                            if (sourcePostingFile.BaseStream.Position != sourcePostingFile.BaseStream.Length)
+                            {
+                                sourcePostingFileEntry = sourcePostingFile.ReadString();
+                                sourcePostingFileEntry = TermFrequency.AddFrequenciesToString(sourcePostingFileEntry, termToIndex.FrequenciesInDocuments);
+                                targetPostingFile.Write(sourcePostingFileEntry);
+                                fileCursor++;
                             }
                             else
                             {
-                                sourcePostingFileEntry = TermFrequency.AddFrequenciesToString(sourcePostingFileEntry, termToIndex.FrequenciesInDocuments);
-                                targetPostingFile.WriteLine(sourcePostingFileEntry);
-                                fileCursor++;
-
+                                targetPostingFile.Write(termToIndex.FrequenciesInDocuments);
                             }
                             i++;
 
@@ -367,8 +376,7 @@ namespace SearchEngine
 
         private int MatchPostingFileToTerm(string term)
         {
-            char firstLetter = term[0];
-            int ans = (firstLetter - minCharValue) / charIntervalForPostingFile;
+            int ans = (int)Math.Ceiling((double)(term[0] - minCharValue ) / (double)(charIntervalForPostingFile));
             return Math.Max(Math.Min(ans, NumOfPostingFiles - 1), 0);
         }
 

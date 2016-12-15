@@ -197,6 +197,10 @@ namespace SearchEngine
             //Move to doc number 
             fileIndexer++;
             string docNo = file[fileIndexer];
+            if (docNo.IndexOf("FBIS3-") >= 0)
+            {
+                docNo=docNo.Substring(docNo.IndexOf("FBIS3-") + 6);
+            }
             // Skip on closing tag of doc numner
             fileIndexer = fileIndexer + 2;
             return docNo;
