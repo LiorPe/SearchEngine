@@ -70,6 +70,11 @@ namespace GUI
             worker.RunWorkerAsync();
             ProgressWindow pWin = new ProgressWindow(ref idx);
             pWin.ShowDialog();
+            if (pWin.DialogResult != true)
+            {
+                return;
+            }
+            loadSuccess = true;
             stopWatch.Stop();
 
             #region statistics
@@ -147,6 +152,8 @@ namespace GUI
                 //true if exists
                 dest = destPath.Text;
                 string target;
+                if (dest == String.Empty || dest == null)
+                    return false;
                 if (dest[dest.Length - 1] == '\\')
                     target = dest;
                 else target = dest + '\\';

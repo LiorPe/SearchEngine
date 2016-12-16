@@ -43,7 +43,10 @@ namespace GUI
                     pBar.Value = ((Indexer)sender).progress;
                     pBarPercent.Text = Convert.ToInt32(((Indexer)sender).progress*100).ToString() +"%";
                     if (Convert.ToInt32(((Indexer)sender).progress * 100) == 100)
+                    {
+                        DialogResult = true;
                         Close();
+                    }
                 });
             };
         }

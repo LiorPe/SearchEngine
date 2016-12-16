@@ -83,13 +83,12 @@ namespace SearchEngine
             _destPostingFiles = destPostingFiles;
             charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
             _mainDictionaryFilePath = mainDictionaryFilePath;
-
             if (mode == Mode.Create)
             {
-            InitLastRowWrittenInFile();
-            InitMainDictionary();
-            InitLastRowWrittenInFile();
-            InitPostingFiles();
+                InitLastRowWrittenInFile();
+                InitMainDictionary();
+                InitLastRowWrittenInFile();
+                InitPostingFiles();
             }
 
 
