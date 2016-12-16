@@ -27,6 +27,7 @@ namespace GUI
         public ProgressWindow(ref Indexer idx)
         {
             InitializeComponent();
+            pBar.Value = 0;
             index = idx;
             DataContext = "index";
             index.PropertyChanged += delegate (Object sender, PropertyChangedEventArgs e)

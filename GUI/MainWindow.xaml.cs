@@ -70,7 +70,6 @@ namespace GUI
             worker.RunWorkerAsync();
             ProgressWindow pWin = new ProgressWindow(ref idx);
             pWin.ShowDialog();
-            loadSuccess = true;
             stopWatch.Stop();
 
             #region statistics
@@ -118,6 +117,7 @@ namespace GUI
                 stopwords = src + "stop_words.txt";
             else stopwords = src + "\\stop_words.txt";
             idx.IndexCorpus(src, stopwords, stemming);
+            loadSuccess = true;
         }
 
         private void ShowProgress()
