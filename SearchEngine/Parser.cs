@@ -62,14 +62,12 @@ namespace SearchEngine
             int numOfFiles = filePathes.Length;
             for (int i = 0; i < numOfFiles; i++)
             {
-                Console.WriteLine("Current file:{0}", (new FileInfo(filePathes[i])).Name);
                 string[] file = FileReader.ReadTextFile(filePathes[i]);
                 int fileLength = file.Length;
                 int fileIndexer = 0;
                 while (fileIndexer < fileLength)
                 {
                     string docNo = GetDocNummer(file, ref fileIndexer);
-                    Console.WriteLine("Current document:{0}", docNo);
                     if (fileIndexer == fileLength)
                         break;
                     FindBegginingOfText(file, ref fileIndexer);
@@ -488,7 +486,7 @@ namespace SearchEngine
 
             if (fileIndexer+3< file.Length && token == "between" && Double.TryParse(NormalizeToken(file[fileIndexer+1]),out value1) && NormalizeToken(file[fileIndexer+2])=="and" && Double.TryParse(NormalizeToken(file[fileIndexer + 3]), out value2))
             {
-                token = String.Format("Between {0} and {1}", value1, value2);
+                token = String.Format("between {0} and {1}", value1, value2);
                 countFrequenciesSeperately = true;
             }
 
