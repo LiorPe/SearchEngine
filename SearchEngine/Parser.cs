@@ -37,13 +37,12 @@ namespace SearchEngine
             {"feb","02" },
             {"mar","03" },
             {"apr","04" },
-            {"may","05" },
             {"jul","07" },
             {"aug","08" },
             {"sep","09" },
             {"oct","10" },
             {"nov","11" },
-            {"dec","12" },
+            {"dec","12" }
         };
 
         private static readonly Dictionary<string, double> largeNumbers = new Dictionary<string, double>
@@ -63,12 +62,14 @@ namespace SearchEngine
             int numOfFiles = filePathes.Length;
             for (int i = 0; i < numOfFiles; i++)
             {
+                Console.WriteLine("Current file:{0}", (new FileInfo(filePathes[i])).Name);
                 string[] file = FileReader.ReadTextFile(filePathes[i]);
                 int fileLength = file.Length;
                 int fileIndexer = 0;
                 while (fileIndexer < fileLength)
                 {
                     string docNo = GetDocNummer(file, ref fileIndexer);
+                    Console.WriteLine("Current document:{0}", docNo);
                     if (fileIndexer == fileLength)
                         break;
                     FindBegginingOfText(file, ref fileIndexer);
@@ -106,10 +107,11 @@ namespace SearchEngine
                 {
                     bool tokenRecursivelyParsed = false;
                     bool countFrequenciesSeperately = false;
-                    bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    bool avoidStopWords = false;
+                    bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm, ref avoidStopWords);
                     if (useStemming && !tokenCanBeStemmed && !tokenRecursivelyParsed)
                         token = ActivateStemming(token);
-                    if (!tokenRecursivelyParsed && !IsAStopWord(token))
+                    if (!tokenRecursivelyParsed && (!IsAStopWord(token) || avoidStopWords))
                     {
                         documentLength++;
                         UpdateTermsFrequenciesInOneDocument(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
@@ -312,7 +314,7 @@ namespace SearchEngine
         }
 
 
-        public static bool ActivateDerivationLaws(ref string token, string[] file, ref int fileIndexer, ref bool tokenRecursivelyParsed, ref bool countFrequenciesSeperately, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
+        public static bool ActivateDerivationLaws(ref string token, string[] file, ref int fileIndexer, ref bool tokenRecursivelyParsed, ref bool countFrequenciesSeperately, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm, ref bool avoidStopWords)
         {
             string[] splittedToken;
             double numericValue;
@@ -367,10 +369,12 @@ namespace SearchEngine
             else if ((splittedToken = token.Split('.')).Length > 1 && splittedToken.All(s => s.Length == 1 && Char.IsLetter(s[0])))
             {
                 token = String.Empty;
+
                 foreach (string initial in splittedToken)
                 {
                     token += initial;
                 }
+                avoidStopWords = true;
                 return false;
 
             }

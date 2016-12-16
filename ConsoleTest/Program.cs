@@ -13,9 +13,8 @@ namespace ConsoleTest
     {
             static void Main(string[] args)
         {
-                int[] PostingFilesAmount = new int[] { 2,4,6,8,10,12,14 };
-                int[] ParserFactor = new int[] { 2, 4, 6, 8, 10, 12, 14 };
-
+                int[] PostingFilesAmount = new int[] {5,6,7,8,9,10};
+                int[] ParserFactor = new int[] {10 };
             List<string> results = new List<string>();
             foreach (int parser in ParserFactor)
             {
@@ -40,10 +39,10 @@ namespace ConsoleTest
 
                 }
             }
-             //LoadIndexFromMemory(out indexer);
+            //LoadIndexFromMemory(out indexer);
             //ParseFile("case--different	");
             //ParseFile(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus\FB396161");
-
+            Console.ReadKey();
 
 
 
@@ -53,6 +52,7 @@ namespace ConsoleTest
         {
             indexer = new Indexer(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles",Mode.Create,parser,post);
             indexer.IndexCorpus(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus", @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus\stop_words.txt", false);
+
         }
 
         public static void LoadIndexFromMemory(out Indexer indexer)
@@ -70,10 +70,9 @@ namespace ConsoleTest
             string mostFrequentTerm = String.Empty;
             bool tokenRecursivelyParsed = false;
             bool countFrequenciesSeperately = false;
-
-            Parser.InitStopWords(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt");
+            bool avoidStopwWords = false;
             s = Parser.NormalizeToken(s);
-            Parser.ActivateDerivationLaws(ref s, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, false, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+            Parser.ActivateDerivationLaws(ref s, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, false, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm, ref avoidStopwWords);
         }
 
         public static void ParseFile(string word)
