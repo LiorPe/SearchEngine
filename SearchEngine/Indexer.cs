@@ -32,6 +32,8 @@ namespace SearchEngine
         int charIntervalForPostingFile;
         const int minCharValue = 'a';
         public ObservableCollection<TermData> MainDictionary;
+        public ObservableCollection<DocumentData> DocumentsData;
+
         public const string MainDictionaryFileNameStemming = "MainDictionaryStemming.zip";
         public const string MainDictionaryFileNameWithoutStemming = "MainDictionaryWithoutStemming.zip";
 
@@ -144,6 +146,7 @@ namespace SearchEngine
             }
             status = "Merging main dictionary"; 
             MergeSplittedDictionaries();
+            InitDocumentsData();
             status = "Finding all languages exist in courpus";
             ExtractLanguages();
             status = "Saving dictionary to file";
@@ -377,12 +380,18 @@ namespace SearchEngine
             lastRowWrittenInFile = dictionaryData._lastRowWrittenInFile;
             //MainDictionary = dictionaryData._mainDictionary;
             status = "Merging sub-dictionaries to main dictionary";
-            MergeSplittedDictionaries();
             DocLanguages = dictionaryData._docLanguages;
             _documnentsData = dictionaryData._docData;
+            MergeSplittedDictionaries();
+            InitDocumentsData();
             status = "Done";
             progress = 1;
             return true;
+        }
+
+        private void InitDocumentsData()
+        {
+            DocumentsData = new ObservableCollection<DocumentData>(_documnentsData.Values.ToArray());
         }
 
         [Serializable]

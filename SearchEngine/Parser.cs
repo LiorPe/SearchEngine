@@ -56,10 +56,18 @@ namespace SearchEngine
 
 
         #endregion
+        /// <summary>
+        /// Main funnction for parsing files.
+        /// </summary>
+        /// <param name="filePathes">Array of corpus files pathes.</param>
+        /// <param name="useStemming"> if tou use stemming</param>
+        /// <param name="termsToIndex"> The terms found in given documents</param>
+        /// <param name="documentsData"> The documents found in files</param>
         public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex,  Dictionary<string, DocumentData> documentsData)
         {
-            Dictionary<string, TermFrequency> postingFile = new Dictionary<string, TermFrequency>();
+            Dictionary<string, TermFrequency> termsFoundInFiles = new Dictionary<string, TermFrequency>();
             int numOfFiles = filePathes.Length;
+            // for each file given to parser:
             for (int i = 0; i < numOfFiles; i++)
             {
                 string[] file = FileReader.ReadTextFile(filePathes[i]);
@@ -67,27 +75,30 @@ namespace SearchEngine
                 int fileIndexer = 0;
                 while (fileIndexer < fileLength)
                 {
+                    // Find the document number, and move file cursor to it.
                     string docNo = GetDocNummer(file, ref fileIndexer);
                     if (fileIndexer == fileLength)
                         break;
+                    // Find beginning of text in this document.
                     FindBegginingOfText(file, ref fileIndexer);
-
+                    // Look for language of document if exists
                     string docLanguage = GetLanguage(file, ref fileIndexer);
+                    // Init most frequent term and its frequencies, document length for this document.
                     string mostFrequentTerm = "";
                     int documentLength = 0;
                     int frquenciesOfMostFrequentTerm = 0;
                     Dictionary<string, int> termFrequencies = new Dictionary<string, int>();
 
-
+                    // Derive all tokens of this document`s text.
                     IterateTokens(ref fileIndexer, file, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
                     documentsData[docNo] = new DocumentData(docNo, mostFrequentTerm, frquenciesOfMostFrequentTerm, termFrequencies.Keys.Count, docLanguage, documentLength);
-                    UpdateTermsExistInDocument(termFrequencies, postingFile, docNo);
+                    UpdateTermsExistInDocument(termFrequencies, termsFoundInFiles, docNo);
 
 
 
                 }
             }
-            termsToIndex = postingFile.Values.ToArray<TermFrequency>();
+            termsToIndex = termsFoundInFiles.Values.ToArray<TermFrequency>();
 
         }
 
