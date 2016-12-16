@@ -3,6 +3,10 @@
 namespace SearchEngine
 {
     [Serializable]
+    
+
+ 
+    ///Represnt data of document
     public class DocumentData
     {
         private static char[] Delimiter = new char[] { '~' };

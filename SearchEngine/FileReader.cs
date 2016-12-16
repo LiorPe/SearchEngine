@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace SearchEngine
 {
+
+    // Reads File to memory
     public static class FileReader
     {
         public static readonly char[] Splitters = {' ','\n'};

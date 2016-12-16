@@ -4,6 +4,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace SearchEngine
 {
     [Serializable]
+    // Represents term frequencies in group of files read to memory
+
     public class TermData
     {
         public string Term { get; set; }

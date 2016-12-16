@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 namespace SearchEngine
 {
+
+    // Represents term frequencies in group of files read to memory (before indexing)
     public class TermFrequency
     {
         public string Term { get; set; }
