@@ -24,6 +24,10 @@ namespace GUI
     {
         Indexer index;
 
+        /// <summary>
+        /// Ctor for the ProgressWindow
+        /// </summary>
+        /// <param name="idx">Reference to the used Indexer in the main window</param>
         public ProgressWindow(ref Indexer idx)
         {
             InitializeComponent();
@@ -32,11 +36,13 @@ namespace GUI
             DataContext = "index";
             index.PropertyChanged += delegate (Object sender, PropertyChangedEventArgs e)
             {
+                //update status on property change notification
                 if (e.PropertyName == "Status")
                     this.Dispatcher.Invoke(() =>
                     {
                         statusTB.Text = ((Indexer)sender).status;
                     });
+                //update progress on property change notification
                 if (e.PropertyName == "Progress")
                 this.Dispatcher.Invoke(() =>
                 {
@@ -44,6 +50,7 @@ namespace GUI
                     pBarPercent.Text = Convert.ToInt32(((Indexer)sender).progress*100).ToString() +"%";
                     if (Convert.ToInt32(((Indexer)sender).progress * 100) == 100)
                     {
+                        ///kill window when progress==100
                         DialogResult = true;
                         Close();
                     }

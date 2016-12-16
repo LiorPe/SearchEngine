@@ -37,6 +37,9 @@ namespace GUI
         Indexer idx;
         Boolean loadSuccess;
 
+        /// <summary>
+        /// Ctor for the MainWindow
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -50,8 +53,12 @@ namespace GUI
             loadSuccess = false;
         }
 
+        /// <summary>
+        /// Interaction logic for the Start button
+        /// </summary>
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
+            ///start stopwatch for statistics purposes
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             //check for valid paths
@@ -64,12 +71,14 @@ namespace GUI
             dest = destPath.Text;
             idx = new Indexer(dest, dest, Mode.Create);
             hasIndex = true;
+            //run backgroundworker for the actual process
             BackgroundWorker worker = new BackgroundWorker();
             worker.WorkerReportsProgress = true;
             worker.DoWork += _Start_Click;
             worker.RunWorkerAsync();
             ProgressWindow pWin = new ProgressWindow(ref idx);
             pWin.ShowDialog();
+            //protection from permature killing of the progress window
             if (pWin.DialogResult != true)
             {
                 return;
@@ -98,15 +107,17 @@ namespace GUI
             Lang.ItemsSource = idx.DocLanguages;
         }
 
+        /// <summary>
+        /// The actual process behind the Start button
+        /// </summary>
         private void _Start_Click(object sender, DoWorkEventArgs e)
         {
-
+            //use dispatcher to interact with the UI thread
             this.Dispatcher.Invoke(() =>
             {
                 src = srcPath.Text;
                 dest = destPath.Text;
             });
-            //ShowProgress();
             //check stemming checkbox
             this.Dispatcher.Invoke(() =>
             {
@@ -124,28 +135,25 @@ namespace GUI
             loadSuccess = true;
         }
 
-        private void ShowProgress()
-        {
-
-            Thread t = new Thread(() =>
-            {
-                ProgressWindow pWin = new ProgressWindow(ref idx);
-                pWin.Show();
-            });
-
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-
-        }
-
+        /// <summary>
+        /// validation of the destination path given by the user
+        /// </summary>
+        /// <returns></returns>
         private bool IsValid_src()
         {
             //true if exists
                 src = srcPath.Text;
             return System.IO.Directory.Exists(src);
         }
+        
+        /// <summary>
+        /// validation of the destination path given by the user
+        /// </summary>
+        /// <param name="type">identifies the type of path given</param>
+        /// <returns></returns>
         private bool IsVaild_dest(string type)
         {
+            //user wants to load an existing dictionary
             if (type == "load")
             {
                 //true if exists
@@ -156,10 +164,12 @@ namespace GUI
                 if (dest[dest.Length - 1] == '\\')
                     target = dest;
                 else target = dest + '\\';
-                if (!File.Exists(target + "MainDictionaryStemming.zip") && !File.Exists(target + "MainDictionaryWithoutStemming.zip"))
+                //make sure that the correct dictionary exists in directory
+                if ((stemming && !File.Exists(target + "MainDictionaryStemming.zip")) || (!stemming && !File.Exists(target + "MainDictionaryWithoutStemming.zip")))
                     return false;
                 return System.IO.Directory.Exists(dest);
             }
+            //user wants to create a new dictionary
             else if (type == "start")
             {
                 //true if not empty
@@ -169,6 +179,9 @@ namespace GUI
             else return false;
         }
 
+        /// <summary>
+        /// Interaction logic for the RESET button; Empties main memory and calls file deletion function
+        /// </summary>
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             //reset args, empty path textboxes
@@ -183,6 +196,9 @@ namespace GUI
             System.Windows.MessageBox.Show("The IR Engine has been reset.", "IREngine Reset", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        /// <summary>
+        /// Function to delete dictionary and posting files
+        /// </summary>
         private void Delete_Files()
         {
             string target;
@@ -205,8 +221,12 @@ namespace GUI
             
         }
 
+        /// <summary>
+        /// Interaction logic for the Show Dictionary button; Calls a DictionaryWindow
+        /// </summary>
         private void Show_Click(object sender, RoutedEventArgs e)
         {
+            //Check that there's a dictionary in the main memory
             if (!hasIndex || !loadSuccess)
             {
                 System.Windows.MessageBox.Show("Please start the indexing or load a dictionary first.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -218,27 +238,32 @@ namespace GUI
             }
         }
 
+        /// <summary>
+        /// Interaction logic for the LOAD button
+        /// </summary>
         private void Load_Click(object sender, RoutedEventArgs e)
         {
-            if (!IsVaild_dest("load"))
-            {
-                System.Windows.MessageBox.Show("Please input valid path.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
             //check stemming checkbox
             if ((bool)stemCheck.IsChecked)
                 stemming = true;
             else
                 stemming = false;
+            if (!IsVaild_dest("load"))
+            {
+                System.Windows.MessageBox.Show("Please input valid path.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             dest = destPath.Text;
             idx = new Indexer(dest, dest, Mode.Load);
             hasIndex = true;
+            //call backgroundworker for the actual loading process
             BackgroundWorker worker = new BackgroundWorker();
             worker.WorkerReportsProgress = true;
             worker.DoWork += _Load_Click;
             worker.RunWorkerAsync();
             IndeterminateProgressWindow ipWin = new IndeterminateProgressWindow(ref idx);
             ipWin.ShowDialog();
+            //protection for premature killing of the progress window
             if(!loadSuccess)
             {
                 System.Windows.MessageBox.Show("Dictionary loading failed.", "Loading Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -247,12 +272,18 @@ namespace GUI
 
         }
 
+        /// <summary>
+        /// Actual loading process
+        /// </summary>
         private void _Load_Click(object sender, DoWorkEventArgs e)
         {
             loadSuccess = idx.LoadMainDictionaryFromMemory(stemming);
             //saveXML();
         }
 
+        /// <summary>
+        /// XML export function for statistical purposes
+        /// </summary>
         private void saveXML()
         {
             string target;
@@ -279,17 +310,27 @@ namespace GUI
             }
         }
 
+        /// <summary>
+        /// Getter/Setter for src_path
+        /// </summary>
         public string src_path
         {
             get { return srcPath.Text; }
             set { srcPath.Text = value; }
         }
+
+        /// <summary>
+        /// Getter/Setter for dst_path
+        /// </summary>
         public string dst_path
         {
             get { return destPath.Text; }   
             set { destPath.Text = value; }
         }
 
+        /// <summary>
+        /// Directory selection dialog for the source path box
+        /// </summary>
         private void src_browse_button_Click(object sender, RoutedEventArgs e)
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();
@@ -300,6 +341,9 @@ namespace GUI
             src_path = fbd.SelectedPath;
         }
 
+        /// <summary>
+        /// Directory selection dialog for the destination path box
+        /// </summary>
         private void dst_browse_button_Click(object sender, RoutedEventArgs e)
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();

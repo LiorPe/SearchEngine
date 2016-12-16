@@ -22,6 +22,11 @@ namespace GUI
     public partial class IndeterminateProgressWindow : Window
     {
         Indexer index;
+
+        /// <summary>
+        /// Ctor for IndeterminateProgressWindow
+        /// </summary>
+        /// <param name="idx">Reference to the used Indexer in the main window</param>
         public IndeterminateProgressWindow(ref Indexer idx)
         {
             InitializeComponent();
@@ -33,10 +38,12 @@ namespace GUI
             });
             index.PropertyChanged += delegate (Object sender, PropertyChangedEventArgs e)
             {
+                //update status on property change notification
                 if (e.PropertyName == "Status")
                     this.Dispatcher.Invoke(() =>
                     {
                         statusTB.Text = ((Indexer)sender).status;
+                        //kill window if given the proper notification
                         if (index.status == "Done")
                             Close();
                     });
