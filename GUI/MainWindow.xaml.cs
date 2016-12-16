@@ -74,7 +74,6 @@ namespace GUI
             {
                 return;
             }
-            loadSuccess = true;
             stopWatch.Stop();
 
             #region statistics
