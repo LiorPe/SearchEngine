@@ -20,6 +20,10 @@ namespace GUI
     /// </summary>
     public partial class DictionaryWindow : Window
     {
+        /// <summary>
+        /// Ctor for DictionaryWindow
+        /// </summary>
+        /// <param name="idx">Reference to the used Indexer in the main window</param>
         public DictionaryWindow(ref Indexer idx)
         {
             InitializeComponent();
@@ -27,6 +31,9 @@ namespace GUI
             dgIndex.ItemsSource = idx.MainDictionary;
         }
 
+        /// <summary>
+        /// Function to close the window on clicking the OK button
+        /// </summary>
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             Close();

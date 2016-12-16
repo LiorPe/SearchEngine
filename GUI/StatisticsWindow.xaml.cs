@@ -19,14 +19,23 @@ namespace GUI
     /// </summary>
     public partial class StatisticsWindow : Window
     {
-        public StatisticsWindow(int files, int terms, string time)
+        /// <summary>
+        /// Ctor for StatisticsWindow
+        /// </summary>
+        /// <param name="docs">int representing the number of documents processed</param>
+        /// <param name="terms">int representing the number of unique terms in dictionary</param>
+        /// <param name="time">string representing the total runtime of the indexing process</param>
+        public StatisticsWindow(int docs, int terms, string time)
         {
             InitializeComponent();
-            docsTB.Text = ""+files;
+            docsTB.Text = ""+docs;
             termsTB.Text = ""+terms;
             timeTB.Text = time;
         }
 
+        /// <summary>
+        /// Function to close the window on clicking the OK button
+        /// </summary>
         private void OK_Click(object sender, RoutedEventArgs e)
         {
             Close();
