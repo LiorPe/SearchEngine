@@ -548,7 +548,7 @@ namespace SearchEngine
                     //if it represents day
                     if (value <= 31)
                     {
-                        token = token + "-" + file[fileIndexer + 1];
+                        token = months[token] + "-" + file[fileIndexer + 1];
                         fileIndexer++;
                     }
                     //if it represents year

@@ -133,6 +133,7 @@ namespace GUI
             else stopwords = src + "\\stop_words.txt";
             idx.IndexCorpus(src, stopwords, stemming);
             loadSuccess = true;
+            saveXML();
         }
 
         /// <summary>
