@@ -47,7 +47,7 @@ namespace SearchEngine
 
         private static readonly Dictionary<string, double> largeNumbers = new Dictionary<string, double>
         {
-            {"milion",1 },
+            {"million",1 },
             {"billion",(int)1E3},
             {"trilion",(int)1E6},
         };
@@ -135,7 +135,7 @@ namespace SearchEngine
                     // Activate derivation laws on token, and return true if the token can be stemmed.
                     bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm, ref avoidStopWords);
                     // If need to use stemming,and token can be stemmed, stem the token
-                    if (useStemming && !tokenCanBeStemmed && !tokenRecursivelyParsed)
+                    if (useStemming && tokenCanBeStemmed && !tokenRecursivelyParsed)
                         token = ActivateStemming(token);
                     // If token weren`t already parsed seperately (=tokenRecursivelyParsed) and token is not a stopword:
                     if (!tokenRecursivelyParsed && (!IsAStopWord(token) || avoidStopWords))
@@ -579,7 +579,8 @@ namespace SearchEngine
         /// </summary>
         private static void ActivateDerivationLawsForNumbers(ref string token, string[] file, ref int fileIndexer, double numericValue, string suffix,string prefix)
         {
-            numericValue = ParseLargeNumbers(ref token, numericValue, suffix, file, ref fileIndexer);
+
+                numericValue = ParseLargeNumbers(ref token, numericValue, suffix, file, ref fileIndexer);
             string nextToken = string.Empty;
             if (fileIndexer + 1 < file.Length)
                 nextToken = NormalizeToken(file[fileIndexer + 1] );

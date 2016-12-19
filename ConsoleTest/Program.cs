@@ -22,7 +22,7 @@ namespace ConsoleTest
                     Indexer indexer;
                     //CreeateIndexForTheFirstTime(out indexer, parser, post);
 
-                    DerivationLaws(new string[] { "19", "March" ,"1994" });
+                    DerivationLaws(new string[] { "$35", "Million"});
                     stopWatch.Stop();
                     // Get the elapsed time as a TimeSpan value.
                     TimeSpan ts = stopWatch.Elapsed;
