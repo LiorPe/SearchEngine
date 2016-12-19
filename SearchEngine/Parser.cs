@@ -582,7 +582,7 @@ namespace SearchEngine
             numericValue = ParseLargeNumbers(ref token, numericValue, suffix, file, ref fileIndexer);
             string nextToken = string.Empty;
             if (fileIndexer + 1 < file.Length)
-                nextToken = NormalizeToken(file[fileIndexer] + 1);
+                nextToken = NormalizeToken(file[fileIndexer + 1] );
 
             //if represents a date
             if (numericValue <= 31 && months.ContainsKey(nextToken))
