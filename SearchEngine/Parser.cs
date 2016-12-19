@@ -49,7 +49,7 @@ namespace SearchEngine
         {
             {"million",1 },
             {"billion",(int)1E3},
-            {"trilion",(int)1E6},
+            {"trillion",(int)1E6},
         };
         private static HashSet<string> PrefixesOfNumbers = new HashSet<string>() { "$", "%",String.Empty };
         private static HashSet<string> SufffixesOfNumbers = new HashSet<string>() { "%", "$", "m", "th", "st", "rd", "bn", String.Empty };
