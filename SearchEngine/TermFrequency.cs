@@ -61,12 +61,6 @@ namespace SearchEngine
 
         }
 
-        public override string ToString() {
-            string res = string.Format("{0}{1}{2}{1}{3}", Term, Delimiter, CollectionFrequency, frequenciesInDocuments);
-            return res;
-
-
-        }
 
         public static string AddFrequenciesToString(string sourceFrequencies, string freqToAdd)
         {
