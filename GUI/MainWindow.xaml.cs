@@ -98,13 +98,13 @@ namespace GUI
             string result = string.Format("{0}", elapsedTime);
 
             // Get number of indexed documents
-            int fileCount = Directory.GetFiles(src).Length - 1;
+            int documentCount = idx.DocumentsData.Count();
             // Get number of unique terms
             int terms = idx.MainDictionary.Count();
             #endregion
 
             // Show statistics window
-            StatisticsWindow sWin = new StatisticsWindow(fileCount, terms, result);
+            StatisticsWindow sWin = new StatisticsWindow(documentCount, terms, result);
             sWin.ShowDialog();
             Lang.ItemsSource = idx.DocLanguages;
         }
@@ -135,7 +135,6 @@ namespace GUI
             else stopwords = src + "\\stop_words.txt";
             idx.IndexCorpus(src, stopwords, stemming);
             loadSuccess = true;
-            saveXML();
         }
 
         /// <summary>
@@ -337,8 +336,6 @@ namespace GUI
         private void src_browse_button_Click(object sender, RoutedEventArgs e)
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();
-            //ofd.Filter = "Maze Files | *.maze";
-            //ofd.DefaultExt = "maze";
             if (fbd.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                 return;
             src_path = fbd.SelectedPath;
@@ -350,8 +347,6 @@ namespace GUI
         private void dst_browse_button_Click(object sender, RoutedEventArgs e)
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();
-            //ofd.Filter = "Maze Files | *.maze";
-            //ofd.DefaultExt = "maze";
             if (fbd.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                 return;
             dst_path = fbd.SelectedPath;
