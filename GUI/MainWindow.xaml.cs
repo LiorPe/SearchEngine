@@ -46,9 +46,11 @@ namespace GUI
             Keyboard.Focus(srcPath);
             stemming = true;
             hasIndex = false;
-            stemCheck.IsChecked = true;
+            stemCheck.IsChecked = false;
             dest = "";
             src = "";
+            destPath.Text = @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles";
+            srcPath.Text = @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus";
             ResizeMode = ResizeMode.NoResize;
             loadSuccess = false;
         }

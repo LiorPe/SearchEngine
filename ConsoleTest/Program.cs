@@ -85,7 +85,7 @@ namespace ConsoleTest
             bool countFrequenciesSeperately = false;
 
             Parser.InitStopWords(@"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\stop_words.txt");
-            Parser.IterateTokens(ref fileIndexer, file, false, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+            Parser.IterateTokens(ref fileIndexer, file,new Dictionary<string, int>());
         }
 
     }

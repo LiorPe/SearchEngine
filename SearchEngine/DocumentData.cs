@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SearchEngine
 {
@@ -16,8 +17,9 @@ namespace SearchEngine
         public int AmmountOfUniqueTerms{get;set;}
         public string Language{get;set;}
         public int DocumentLength{get;set;}
+        public Dictionary<string,int> TermsInTitle;
 
-        public DocumentData(string docNo, string mostFrequentTerm, int frquenciesOfMostFrequentTerm, int ammountOfUniqueTerms, string language, int documentLength)
+        public DocumentData(string docNo, string mostFrequentTerm, int frquenciesOfMostFrequentTerm, int ammountOfUniqueTerms, string language, int documentLength, Dictionary<string,int> termsInTitle)
         {
             DocNumber = docNo;
             MostFrequentTerm = mostFrequentTerm;
@@ -25,6 +27,7 @@ namespace SearchEngine
             AmmountOfUniqueTerms = ammountOfUniqueTerms;
             Language = language;
             DocumentLength = documentLength;
+            TermsInTitle = termsInTitle;
         }
 
         public override string ToString()

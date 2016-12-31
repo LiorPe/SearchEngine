@@ -8,12 +8,24 @@ namespace SearchEngine
     public static class Parser
     {
         #region Attributes
-        public static int counter = 0;
+
+        static int _fileIndexer;
+        static string[] _file;
+        static bool _useStemming;
+        static int _documentLength;
+        static Dictionary<string, int> _termFrequencies;
+        static int _frquenciesOfMostFrequentTerm;
+        static string _mostFrequentTerm;
+        static Dictionary<string, Dictionary<string, int>> _nextTermsFrequency;
+
         static readonly string DocNumberOpeningTag = "<DOCNO>";
         static readonly string PreecedantDocLanguage = "Language:";
         static readonly string DocLanguageOpeningTag = "P=105>";
         static readonly string BeginningOfTextTag = "<TEXT>";
         static readonly string EndOfTextTag = "</TEXT>";
+        static readonly string TitleOpeningTag = "<TI>";
+        static readonly string TitleClosingTag = "</TI></H3>";
+
         private static Stemmer sStemmer = new Stemmer();
         public static HashSet<string> StopWords = null;
         private readonly static char[] SuffixToRemove = { '-', '~', '`', ';', '!', '@', '#', '^', '&', '*', '(', ')', '=', '+', '[', ']', '{', '}', '\'', '"', '?', '/', '>', ',', '.', ':','\t','\b' };
@@ -65,36 +77,42 @@ namespace SearchEngine
         /// <param name="documentsData"> The documents found in files</param>
         public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex,  Dictionary<string, DocumentData> documentsData)
         {
+            _useStemming = useStemming;
             Dictionary<string, TermFrequency> termsFoundInFiles = new Dictionary<string, TermFrequency>();
             int numOfFiles = filePathes.Length;
             // for each file given to parser:
             for (int i = 0; i < numOfFiles; i++)
             {
-                string[] file = FileReader.ReadTextFile(filePathes[i]);
-                int fileLength = file.Length;
-                int fileIndexer = 0;
-                while (fileIndexer < fileLength)
+                _file = FileReader.ReadTextFile(filePathes[i]);
+                int fileLength = _file.Length;
+                _fileIndexer = 0;
+                while (_fileIndexer < fileLength)
                 {
                     // Find the document number, and move file cursor to it.
-                    string docNo = GetDocNummer(file, ref fileIndexer);
-                    if (fileIndexer == fileLength)
+                    string docNo = GetDocNummer(_file, ref _fileIndexer);
+                    if (_fileIndexer == fileLength)
                         break;
+                    _nextTermsFrequency = new Dictionary<string, Dictionary<string, int>>();
+                    // Parse Title
+                    Dictionary<string, int> termsInTitle = ParseTitle();
                     // Find beginning of text in this document.
-                    FindBegginingOfText(file, ref fileIndexer);
+                    FindBegginingOfText(_file, ref _fileIndexer);
+                    if (_fileIndexer >= fileLength)
+                        break;
                     // Look for language of document if exists
-                    string docLanguage = GetLanguage(file, ref fileIndexer);
+                    string docLanguage = GetLanguage(_file, ref _fileIndexer);
                     // Init most frequent term and its frequencies, document length for this document.
-                    string mostFrequentTerm = "";
-                    int documentLength = 0;
-                    int frquenciesOfMostFrequentTerm = 0;
-                    Dictionary<string, int> termFrequencies = new Dictionary<string, int>();
+                    _mostFrequentTerm = "";
+                    _documentLength = 0;
+                    _frquenciesOfMostFrequentTerm = 0;
+                    _termFrequencies = new Dictionary<string, int>();
 
                     // Derive all tokens of this document`s text.
-                    IterateTokens(ref fileIndexer, file, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    IterateTokens(ref _fileIndexer,_file, _termFrequencies);
                     // Save data of current document
-                    documentsData[docNo] = new DocumentData(docNo, mostFrequentTerm, frquenciesOfMostFrequentTerm, termFrequencies.Keys.Count, docLanguage, documentLength);
+                    documentsData[docNo] = new DocumentData(docNo, _mostFrequentTerm, _frquenciesOfMostFrequentTerm, _termFrequencies.Keys.Count, docLanguage, _documentLength, termsInTitle);
                     // Merge terms frequencies of this document with term frequencies of previous documents.
-                    UpdateTermsExistInDocument(termFrequencies, termsFoundInFiles, docNo);
+                    UpdateTermsExistInDocument( termsFoundInFiles, docNo);
 
 
 
@@ -105,21 +123,48 @@ namespace SearchEngine
 
         }
 
+        private static Dictionary<string, int> ParseTitle()
+        {
+            Dictionary<string, int> termsInTitle = new Dictionary<string, int>();
+            //Reach to opening tag of doc number
+            for (; _fileIndexer < _file.Length && _file[_fileIndexer] != TitleOpeningTag && _file[_fileIndexer] != BeginningOfTextTag; _fileIndexer++) ;
+            // if got to the end of file - break
+            if (_fileIndexer >= _file.Length || _file[_fileIndexer]== BeginningOfTextTag)
+                return termsInTitle;
+            //Move to title 
+            _fileIndexer++;
+            List <string> tokensInTitle = new List<string>();
+            string token = _file[_fileIndexer];
+            while (token != TitleClosingTag)
+            {
+                tokensInTitle.Add(token);
+                token = _file[_fileIndexer];
+                _fileIndexer++;
+            }
+            int titleIndexer = 0;
+            if (tokensInTitle.Count>0)
+                IterateTokens(ref titleIndexer, tokensInTitle.ToArray(), termsInTitle);
+            return termsInTitle;
+        }
+
         /// <summary>
         /// Read text of specific document, acitvate derviation laws, and save all terms frequencies found.
         /// </summary>
-        /// <param name="fileIndexer"> Cursor to file</param>
-        /// <param name="file"> All words in file.</param>
-        /// <param name="useStemming">Is using stemming </param>
-        /// <param name="documentLength"> Number of terms found in document</param>
-        /// <param name="termFrequencies">Maps terms to their frequencies in current document</param>
-        /// <param name="frquenciesOfMostFrequentTerm">How many times the most frequent term appeared.</param>
-        /// <param name="mostFrequentTerm"> Most frequent term</param>
-        public static void IterateTokens(ref int fileIndexer, string[] file, bool useStemming, ref int documentLength, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
+        /// <param name="_fileIndexer"> Cursor to file</param>
+        /// <param name="_file"> All words in file.</param>
+        /// <param name="_useStemming">Is using stemming </param>
+        /// <param name="_documentLength"> Number of terms found in document</param>
+        /// <param name="_termFrequencies">Maps terms to their frequencies in current document</param>
+        /// <param name="_frquenciesOfMostFrequentTerm">How many times the most frequent term appeared.</param>
+        /// <param name="_mostFrequentTerm"> Most frequent term</param>
+        public static void IterateTokens(ref int fileIndexer, string[] file,Dictionary<string,int> termFrequencies)
         {
 
             string[] splittedToken;
             char[] tokenDelimiters = new char[] { ' ', '-' };
+            string previousTerm = null;
+            string currentTerm = null;
+
             // for all token in document`s text
             do
             {
@@ -133,16 +178,17 @@ namespace SearchEngine
                     bool countFrequenciesSeperately = false;
                     bool avoidStopWords = false;
                     // Activate derivation laws on token, and return true if the token can be stemmed.
-                    bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm, ref avoidStopWords);
+                    bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, _useStemming, ref _documentLength, _termFrequencies, ref _frquenciesOfMostFrequentTerm, ref _mostFrequentTerm, ref avoidStopWords);
                     // If need to use stemming,and token can be stemmed, stem the token
-                    if (useStemming && tokenCanBeStemmed && !tokenRecursivelyParsed)
+                    if (_useStemming && tokenCanBeStemmed && !tokenRecursivelyParsed)
                         token = ActivateStemming(token);
                     // If token weren`t already parsed seperately (=tokenRecursivelyParsed) and token is not a stopword:
                     if (!tokenRecursivelyParsed && (!IsAStopWord(token) || avoidStopWords))
                     {
                         // Update frequencies of term in document
-                        documentLength++;
-                        UpdateTermsFrequenciesInCurrentDocument(token, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                        _documentLength++;
+                         UpdateTermsFrequenciesInCurrentDocument(token, termFrequencies);
+                        currentTerm= token;
                         // If the token consists of sub-tokens (for example: "Lior-Ido" can be splitted to "Lior" and "Ido"
                         if (countFrequenciesSeperately )
                         {
@@ -150,17 +196,22 @@ namespace SearchEngine
                             splittedToken = token.Split(tokenDelimiters);
                             foreach (string subtoken in splittedToken)
                             {
-                                if (subtoken!=String.Empty && !StopWords.Contains(NormalizeToken(subtoken)))
-                                    UpdateTermsFrequenciesInCurrentDocument(subtoken, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                                UpdateTermsFrequenciesInCurrentDocument(subtoken, termFrequencies);
                             }
+
                         }
+                                    
                     }
                 }
+                UpdateTermAutoCpmpletion(previousTerm, currentTerm);
+                previousTerm = currentTerm;
+                currentTerm =null;
                 fileIndexer++;
                 // Find next token which is not empty string.
                 MoveIndexToNextToken(ref fileIndexer, file);
 
             } while (!ReachedTODocumentEnd(file, fileIndexer));
+
         }
 
         /// <summary>
@@ -169,20 +220,23 @@ namespace SearchEngine
         /// <param name="termFrequencies">Dictionary of terms to their frequencies in current document</param>
         /// <param name="termsFromPreviousDocuments">Dictionary of terms to their frequencies in all previous documents </param>
         /// <param name="docNumber"></param>
-        private static void UpdateTermsExistInDocument (Dictionary<string, int> termFrequencies, Dictionary<string, TermFrequency> termsFromPreviousDocuments, string docNumber)
+        private static void UpdateTermsExistInDocument (Dictionary<string, TermFrequency> termsFromPreviousDocuments, string docNumber)
         {
-            foreach (string term in termFrequencies.Keys)
+            foreach (string term in _termFrequencies.Keys)
             {
+                Dictionary<string, int> termsCompletion = new Dictionary<string, int>();
+                if (_nextTermsFrequency.ContainsKey(term))
+                    termsCompletion = _nextTermsFrequency[term];
                 // If term already found in previous docoumnets - update its frequency
                 if (termsFromPreviousDocuments.ContainsKey(term))
                 {
-                    termsFromPreviousDocuments[term].AddFrequencyInDocument(docNumber, termFrequencies[term]);
+                    termsFromPreviousDocuments[term].AddFrequencyInDocument(docNumber, _termFrequencies[term], termsCompletion);
                 }
 
                 // If term found for first time in this iteration, create a new entry in dicotionary for term.
                 else
                 {
-                    termsFromPreviousDocuments[term] = new TermFrequency(term, docNumber, termFrequencies[term]);
+                    termsFromPreviousDocuments[term] = new TermFrequency(term, docNumber, _termFrequencies[term], termsCompletion);
                 }
 
             }
@@ -216,7 +270,7 @@ namespace SearchEngine
         /// <param name="termFrequencies"></param>
         /// <param name="frquenciesOfMostFrequentTerm"></param>
         /// <param name="mostFrequentTerm"></param>
-        private static void UpdateTermsFrequenciesInCurrentDocument(string term, Dictionary<string, int> termFrequencies, ref int frquenciesOfMostFrequentTerm, ref string mostFrequentTerm)
+        private static void UpdateTermsFrequenciesInCurrentDocument(string term, Dictionary<string,int> termFrequencies)
         {
             // If term wasn`t found previously in document - set its frequency to one
             if (!termFrequencies.ContainsKey(term))
@@ -226,12 +280,36 @@ namespace SearchEngine
                 termFrequencies[term]++;
 
             // Update mot frquent term in document if neccessary.
-            if (termFrequencies[term] > frquenciesOfMostFrequentTerm)
+            if (termFrequencies[term] > _frquenciesOfMostFrequentTerm)
             {
-                frquenciesOfMostFrequentTerm = termFrequencies[term];
-                mostFrequentTerm = term;
+                _frquenciesOfMostFrequentTerm = termFrequencies[term];
+                _mostFrequentTerm = term;
             }
+
+
         }
+        private static void UpdateTermAutoCpmpletion(string term, string nextTerm)
+        {
+            if (term == null)
+                return;
+           if (nextTerm == null)
+            {
+                if (!_nextTermsFrequency.ContainsKey(term))
+                {
+                    _nextTermsFrequency[term] = new Dictionary<string, int>();
+                }
+
+                return;
+            }
+            // If term wasn`t found previously in document - set create new list of completion terms
+            if (!_nextTermsFrequency.ContainsKey(term))
+                _nextTermsFrequency[term] = new Dictionary<string, int>();
+            if (!_nextTermsFrequency[term].ContainsKey(nextTerm))
+                _nextTermsFrequency[term][nextTerm] = 1;
+            else
+                _nextTermsFrequency[term][nextTerm]++;
+        }
+
 
         /// <summary>
         /// Activate stemming on term
@@ -262,9 +340,9 @@ namespace SearchEngine
             //Move to doc number 
             fileIndexer++;
             string docNo = file[fileIndexer];
-            if (docNo.IndexOf("FBIS3-") >= 0)
+            if (docNo.IndexOf("FBIS") >= 0)
             {
-                docNo = docNo.Substring(docNo.IndexOf("FBIS3-") + 6);
+                docNo = docNo.Substring(docNo.IndexOf("FBIS") + 4);
             }
             // Skip on closing tag of doc numner
             fileIndexer = fileIndexer + 2;
@@ -321,7 +399,7 @@ namespace SearchEngine
         /// </summary>
         private static void FindBegginingOfText(string[] file, ref int fileIndexer)
         {
-            for (; file[fileIndexer] != BeginningOfTextTag; fileIndexer++) ;
+            for (; fileIndexer<file.Length && file[fileIndexer] != BeginningOfTextTag; fileIndexer++) ;
             fileIndexer++;
         }
 
@@ -435,7 +513,7 @@ namespace SearchEngine
                 MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
                 if (recursiveFileIndexer < splittedToken.Length)
                 {
-                    IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    IterateTokens(ref recursiveFileIndexer, splittedToken,_termFrequencies);
                     SkipUpdatingFrequnciesOfThisTerm = true;
                     return false;
                 }
@@ -506,7 +584,7 @@ namespace SearchEngine
                 MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
                 if (recursiveFileIndexer < splittedToken.Length)
                 {
-                    IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    IterateTokens(ref recursiveFileIndexer, splittedToken, _termFrequencies);
                     SkipUpdatingFrequnciesOfThisTerm = true;
                     return false;
                 }
@@ -518,7 +596,7 @@ namespace SearchEngine
                 MoveIndexToNextToken(ref recursiveFileIndexer, splittedToken);
                 if (recursiveFileIndexer < splittedToken.Length)
                 {
-                    IterateTokens(ref recursiveFileIndexer, splittedToken, useStemming, ref documentLength, termFrequencies, ref frquenciesOfMostFrequentTerm, ref mostFrequentTerm);
+                    IterateTokens(ref recursiveFileIndexer, splittedToken, _termFrequencies);
                     SkipUpdatingFrequnciesOfThisTerm = true;
                     return false;
                 }

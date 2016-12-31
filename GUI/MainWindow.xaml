@@ -5,46 +5,117 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="IREngine" Height="500" Width="900"
+        Title="IREngine" Height="1200" Width="1400"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized" WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize">
-    <Grid x:Name="mainGrid">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="32*" MinWidth="10"/>
-            <ColumnDefinition Width="274*" MinWidth="85"/>
-            <ColumnDefinition Width="64*" MinWidth="15"/>
-            <ColumnDefinition Width="22*" MinWidth="20"/>
-            <ColumnDefinition Width="96*" MinWidth="30"/>
-            <ColumnDefinition Width="32*" MinWidth="10"/>
-            <ColumnDefinition Width="97*" MinWidth="30"/>
-            <ColumnDefinition Width="33*" MinWidth="10"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-            <RowDefinition Height="0.2*" MinHeight="40"/>
-            <RowDefinition Height="0.1*" MinHeight="20"/>
-        </Grid.RowDefinitions >
-        <Button x:Name="StartBtn" Grid.Column="4" Grid.ColumnSpan="3" Grid.Row="1" Grid.RowSpan="6" Click="Start_Click" MinWidth="70" MinHeight="60" FontSize="26">Index Corpus</Button>
-        <Button x:Name="Reset" Grid.Column="6" Grid.Row="8" Grid.RowSpan="2" Click="Reset_Click" MinWidth="30" MinHeight="30" FontSize="26">RESET</Button>
-        <Button x:Name="Show" Grid.Column="4" Grid.Row="8" Grid.RowSpan="2" Click="Load_Click" MinWidth="30" MinHeight="30" FontSize="26">LOAD</Button>
-        <Button x:Name="Load" Grid.Column="1" Grid.Row="9" Click="Show_Click" MinWidth="80" MinHeight="20" FontSize="26">Show Dictionary</Button>
-        <Label Grid.Column="1" Grid.Row="6" FontSize="18">Select document language:</Label>
-        <ComboBox x:Name="Lang" Grid.Column="1" Grid.Row="7" FontSize="18">
-        </ComboBox>
-        <CheckBox x:Name="stemCheck" Grid.Column="1" Grid.Row="5" IsChecked="True" VerticalAlignment="Center" MinWidth="80" Margin="0,6" FontSize="18">Enable Stemming (Porter's algorithm)</CheckBox>
-        <Label Grid.Column="1" Grid.Row="3" FontSize="18">Enter destination path:</Label>
-        <TextBox x:Name="destPath" Grid.Column="1" Grid.Row="4" FontSize="18"></TextBox>
-        <Button x:Name="src_browse_button" Content="Browse" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" Width="60"  Click="src_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
-        <Label Grid.Column="1" Grid.Row="1" FontSize="18">Enter source path:</Label>
-        <TextBox x:Name="srcPath" Grid.Column="1" Grid.Row="2" FontSize="18"></TextBox>
-        <Button x:Name="dst_browse_button" Content="Browse" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Width="60"  Click="dst_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
-    </Grid>
+
+        <TabControl>
+        <TabItem Header="Part A - Indexing Corpus" FontSize="20">
+
+            <Grid x:Name="mainGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32*" MinWidth="10"/>
+                    <ColumnDefinition Width="274*" MinWidth="85"/>
+                    <ColumnDefinition Width="64*" MinWidth="15"/>
+                    <ColumnDefinition Width="22*" MinWidth="20"/>
+                    <ColumnDefinition Width="96*" MinWidth="30"/>
+                    <ColumnDefinition Width="32*" MinWidth="10"/>
+                    <ColumnDefinition Width="97*" MinWidth="30"/>
+                    <ColumnDefinition Width="33*" MinWidth="10"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                    <RowDefinition Height="0.2*" MinHeight="40"/>
+                    <RowDefinition Height="0.1*" MinHeight="20"/>
+                </Grid.RowDefinitions >
+                <Button x:Name="StartBtn" Grid.Column="4" Grid.ColumnSpan="3" Grid.Row="1" Grid.RowSpan="6" Click="Start_Click" MinWidth="70" MinHeight="60" FontSize="26">Index Corpus</Button>
+                <Button x:Name="Reset" Grid.Column="6" Grid.Row="8" Grid.RowSpan="2" Click="Reset_Click" MinWidth="30" MinHeight="30" FontSize="26">RESET</Button>
+                <Button x:Name="Show" Grid.Column="4" Grid.Row="8" Grid.RowSpan="2" Click="Load_Click" MinWidth="30" MinHeight="30" FontSize="26">LOAD</Button>
+                <Button x:Name="Load" Grid.Column="1" Grid.Row="9" Click="Show_Click" MinWidth="80" MinHeight="20" FontSize="26">Show Dictionary</Button>
+                <Label Grid.Column="1" Grid.Row="6" FontSize="18">Select document language:</Label>
+                <ComboBox x:Name="Lang" Grid.Column="1" Grid.Row="7" FontSize="18">
+                </ComboBox>
+                <CheckBox x:Name="stemCheck" Grid.Column="1" Grid.Row="5" IsChecked="True" VerticalAlignment="Center" MinWidth="80" Margin="0,6" FontSize="18">Enable Stemming (Porter's algorithm)</CheckBox>
+                <Label Grid.Column="1" Grid.Row="3" FontSize="18">Enter destination path:</Label>
+                <TextBox x:Name="destPath" Grid.Column="1" Grid.Row="4" FontSize="18"></TextBox>
+                <Button x:Name="src_browse_button" Content="Browse" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" Width="60"  Click="src_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
+                <Label Grid.Column="1" Grid.Row="1" FontSize="18">Enter source path:</Label>
+                <TextBox x:Name="srcPath" Grid.Column="1" Grid.Row="2" FontSize="18"></TextBox>
+                <Button x:Name="dst_browse_button" Content="Browse" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Width="60"  Click="dst_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Part B - Submitting Qurries"  FontSize="20">
+            <Grid Margin="0,2,0,-2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions >
+                <Label Content="Please Submit A Query:" FontSize="24" FontWeight="Bold" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <Label Content="Submit Your Query:" FontSize="20" FontWeight="SemiBold" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <Label Content="Load A Query File:" FontSize="20" FontWeight="SemiBold" Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <TextBox x:Name="txtbxUserQuery" FontSize="20" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="4" VerticalAlignment="Center" />
+                <TextBox x:Name="txtbxFileQuery" FontSize="20" FontWeight="SemiBold" Grid.Row="3" Grid.Column="6" Grid.ColumnSpan="4" VerticalAlignment="Center"/>
+                <Button Content="Browse..." Grid.Row="3" Grid.Column="10" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+                <Label Content="Please Choose Languages For Query:" FontSize="20" FontWeight="SemiBold" Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <DataGrid  Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="7" AutoGenerateColumns="False" Grid.RowSpan="3">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Language" FontSize="18" Width="3*"/>
+                        <DataGridCheckBoxColumn Header="Select?" Binding="{Binding MyBool}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Button Content="Search Your Query" Grid.Row="9" Grid.Column="4" Grid.ColumnSpan="3"/>
+                <Label Content="Resulrts:" FontSize="20" FontWeight="SemiBold" Grid.Row="10" Grid.Column="4" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <DataGrid  Grid.Row="11" Grid.Column="2" Grid.ColumnSpan="7" AutoGenerateColumns="False" Grid.RowSpan="6">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Rank" FontSize="18" Width="*"/>
+                        <DataGridTextColumn Header="Document" FontSize="18" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Button Content="Save Results To File" Grid.Row="18" Grid.Column="4" Grid.ColumnSpan="3"/>
+
+            </Grid>
+        </TabItem>
+    </TabControl>
+
 </Window>
