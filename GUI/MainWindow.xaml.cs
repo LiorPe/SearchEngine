@@ -36,6 +36,8 @@ namespace GUI
         string src;
         Indexer idx;
         Boolean loadSuccess;
+        bool uploaded = false;
+        Searcher searcher;
 
         /// <summary>
         /// Ctor for the MainWindow
@@ -53,6 +55,7 @@ namespace GUI
             srcPath.Text = @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus";
             ResizeMode = ResizeMode.NoResize;
             loadSuccess = false;
+            uploaded = true;
         }
 
         /// <summary>
@@ -135,6 +138,7 @@ namespace GUI
             else stopwords = src + "\\stop_words.txt";
             idx.IndexCorpus(src, stopwords, stemming);
             loadSuccess = true;
+            searcher = idx.GetSearcher();
         }
 
         /// <summary>
@@ -193,6 +197,7 @@ namespace GUI
             Lang.ItemsSource = null;
             idx = null;
             hasIndex = false;
+            searcher = null;
             loadSuccess = false;
             Delete_Files();
             System.Windows.MessageBox.Show("The IR Engine has been reset.", "IREngine Reset", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -280,6 +285,8 @@ namespace GUI
         private void _Load_Click(object sender, DoWorkEventArgs e)
         {
             loadSuccess = idx.LoadMainDictionaryFromMemory(stemming);
+            searcher = idx.GetSearcher();
+
             //saveXML();
         }
 
@@ -350,6 +357,37 @@ namespace GUI
             if (fbd.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                 return;
             dst_path = fbd.SelectedPath;
+        }
+
+
+        private void SubmittingQuery_Click(object sender, SelectionChangedEventArgs e)
+        {
+
+            if (uploaded==true && !loadSuccess && mainTabControl.SelectedIndex==1)
+            {
+                System.Windows.MessageBox.Show("Please start the indexing or load a dictionary first.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
+               // mainTabControl.SelectedIndex = 0;
+            }
+        }
+
+        private void UserQueryChanged(object sender, TextChangedEventArgs e)
+        {
+            string userQuery = txtbxUserQuery.Text;
+            ObservableCollection<string> SuggestionsList = new ObservableCollection<string>();
+            if (userQuery.Length>0 && userQuery[userQuery.Length - 1] == ' ')
+            {
+                List<string> autoCompletionSuggestion = searcher.GetCompletionSuggestions(userQuery.Substring(0, userQuery.Length - 1).ToLower());
+                foreach (string suggestion in autoCompletionSuggestion)
+                    SuggestionsList.Add(userQuery + suggestion);
+                if (autoCompletionSuggestion.Count>0)
+                    lstbxAutoComplet.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                lstbxAutoComplet.Visibility = Visibility.Hidden;
+            }
+            lstbxAutoComplet.ItemsSource = SuggestionsList;
+
         }
     }
 }

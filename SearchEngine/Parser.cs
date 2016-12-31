@@ -194,9 +194,15 @@ namespace SearchEngine
                         {
                             // Update frequencies of sub-tokens.
                             splittedToken = token.Split(tokenDelimiters);
-                            foreach (string subtoken in splittedToken)
+                            string subtoken;
+                            for (int i=0;i< splittedToken.Length;i++)
                             {
+                                subtoken = splittedToken[i];
                                 UpdateTermsFrequenciesInCurrentDocument(subtoken, termFrequencies);
+                                if (i+1< splittedToken.Length)
+                                {
+                                    UpdateTermAutoCpmpletion(subtoken, splittedToken[i + 1]);
+                                }
                             }
 
                         }
@@ -290,17 +296,8 @@ namespace SearchEngine
         }
         private static void UpdateTermAutoCpmpletion(string term, string nextTerm)
         {
-            if (term == null)
+            if (String.IsNullOrEmpty(term) || String.IsNullOrEmpty(nextTerm))
                 return;
-           if (nextTerm == null)
-            {
-                if (!_nextTermsFrequency.ContainsKey(term))
-                {
-                    _nextTermsFrequency[term] = new Dictionary<string, int>();
-                }
-
-                return;
-            }
             // If term wasn`t found previously in document - set create new list of completion terms
             if (!_nextTermsFrequency.ContainsKey(term))
                 _nextTermsFrequency[term] = new Dictionary<string, int>();
@@ -340,10 +337,10 @@ namespace SearchEngine
             //Move to doc number 
             fileIndexer++;
             string docNo = file[fileIndexer];
-            if (docNo.IndexOf("FBIS") >= 0)
-            {
-                docNo = docNo.Substring(docNo.IndexOf("FBIS") + 4);
-            }
+            //if (docNo.IndexOf("FBIS") >= 0)
+            //{
+            //    docNo = docNo.Substring(docNo.IndexOf("FBIS") + 4);
+            //}
             // Skip on closing tag of doc numner
             fileIndexer = fileIndexer + 2;
             return docNo;

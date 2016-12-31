@@ -38,6 +38,9 @@ namespace SearchEngine
         public const string MainDictionaryFileNameWithoutStemming = "MainDictionaryWithoutStemming.zip";
 
 
+        public ObservableCollection<string> DocLanguages;
+        private Dictionary<string, DocumentData> _documnentsData = new Dictionary<string, DocumentData>();
+
         // for showing progress:
         public event PropertyChangedEventHandler PropertyChanged;
         
@@ -74,8 +77,6 @@ namespace SearchEngine
             }
         }
 
-        public ObservableCollection<string> DocLanguages;
-        private Dictionary<string, DocumentData> _documnentsData = new Dictionary<string, DocumentData>();
         #region Inits
         /// <summary>
         /// C`tor
@@ -448,6 +449,11 @@ namespace SearchEngine
         private void InitDocumentsData()
         {
             DocumentsData = new ObservableCollection<DocumentData>(_documnentsData.Values.ToArray());
+        }
+
+        public Searcher GetSearcher()
+        {
+            return new Searcher(splittedMainDictionary, _documnentsData, NumOfPostingFiles, ParserFactor, _destPostingFiles);
         }
 
         [Serializable]
