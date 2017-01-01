@@ -18,5 +18,8 @@ namespace SearchEngine
             DF = new Dictionary<string, int>() ;
             NextTermFrequencies =new Dictionary<string, int>();
         }
+
+
+      
     }
 }

@@ -19,18 +19,10 @@ namespace SearchEngine
         // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
         // ptr to file (row number in which term is stored)
         Dictionary<string, TermData>[] splittedMainDictionary;
-        // Saves what is the last row that was written in each posting file (so you can know what is the next availabe row infile)
-        Dictionary<int, int> lastRowWrittenInFile;
-        //How many different posting files exist.
-        public static int NumOfPostingFiles { get; set; }
         public int ParserFactor { get; set; }
         //Path for directory in which postinf files will be saved.
-        string _destPostingFiles;
         string _mainDictionaryFilePath;
 
-        int charValuesRange = 'z' -'a' + 1;
-        int charIntervalForPostingFile;
-        const int minCharValue = 'a';
         public ObservableCollection<TermData> MainDictionary;
         public ObservableCollection<DocumentData> DocumentsData;
 
@@ -40,6 +32,8 @@ namespace SearchEngine
 
         public ObservableCollection<string> DocLanguages;
         private Dictionary<string, DocumentData> _documnentsData = new Dictionary<string, DocumentData>();
+
+        PostingFilesAPI _postingFilesAPI;
 
         // for showing progress:
         public event PropertyChangedEventHandler PropertyChanged;
@@ -52,7 +46,7 @@ namespace SearchEngine
         
         //progress statues between 0-1 
         double _progress = 0;
-        public double progress
+        public double Progress
         {
             get { return _progress; }
             set
@@ -66,7 +60,7 @@ namespace SearchEngine
         }
         //Message about status
         string _status;
-        public string status
+        public string Status
         {
             get { return _status; }
             set { if(_status != value)
@@ -86,21 +80,16 @@ namespace SearchEngine
         /// <param name="mode">Creat index/ load one</param>
         /// <param name="parserFactor">How many files to read to memory simultaneously</param>
         /// <param name="numOfPostiongFiles"> How many posting files are kept</param>
-        public Indexer(string destPostingFiles, string mainDictionaryFilePath, Mode mode, int parserFactor=10, int numOfPostiongFiles = 10)
+        public Indexer(string mainDictionaryFilePath, Mode mode, PostingFilesAPI postingFilesAPI, int parserFactor = 10)
         {
-            NumOfPostingFiles = numOfPostiongFiles;
             ParserFactor = parserFactor;
-            _destPostingFiles = destPostingFiles;
-            // Calculate parametr for hash function of tokens->posting file.
-            charIntervalForPostingFile = (int)Math.Ceiling((double)charValuesRange / (double)NumOfPostingFiles);
             _mainDictionaryFilePath = mainDictionaryFilePath;
+            _postingFilesAPI = postingFilesAPI;
             // Init data structures for creating index
             if (mode == Mode.Create)
             {
-                InitLastRowWrittenInFile();
                 InitMainDictionary();
-                InitLastRowWrittenInFile();
-                InitPostingFiles();
+                _postingFilesAPI.InitPostingFiles(MainDictionaryFileNameStemming, MainDictionaryFileNameWithoutStemming);
             }
 
 
@@ -156,24 +145,24 @@ namespace SearchEngine
                     filesBeingProccessed += String.Format("{0};", Path.GetFileName(fileName));
 
                 }
-                status = String.Format("Parsing files: {0}", filesBeingProccessed);
+                Status = String.Format("Parsing files: {0}", filesBeingProccessed);
                 // Parse group of files and information of terms and documents in files.
                 Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, _documnentsData);
-                status = String.Format("Indexing files: {0}", filesBeingProccessed);
+                Status = String.Format("Indexing files: {0}", filesBeingProccessed);
                 // Index returned terms
-                IndexParsedTerms(termsFrequencies);
-                progress = (double)(i+1) / (double)(size+1);
+                _postingFilesAPI.UpdateTermsInPostingFiles(termsFrequencies,splittedMainDictionary);
+                Progress = (double)(i+1) / (double)(size+1);
                 //Console.WriteLine("{0} , {1}", status, progress);
             }
-            status = "Merging main dictionary"; 
+            Status = "Merging main dictionary"; 
             MergeSplittedDictionaries();
             InitDocumentsData();
-            status = "Finding all languages exist in courpus";
+            Status = "Finding all languages exist in courpus";
             ExtractLanguages();
-            status = "Saving dictionary to file";
+            Status = "Saving dictionary to file";
 
             SaveMainDictionaryToMemory(useStemming);
-            progress = 1;
+            Progress = 1;
             
         }
 
@@ -190,149 +179,20 @@ namespace SearchEngine
             DocLanguages = new ObservableCollection<string>(languages);
         }
 
-        //init dictionary whichmaps the posting file and the last availabe row
-        private void InitLastRowWrittenInFile()
-        {
-            lastRowWrittenInFile = new Dictionary<int, int>();
-            for (int i = 0; i < NumOfPostingFiles; i++)
-            {
-                lastRowWrittenInFile[i] = 0;
-            }
-
-        }
-
-        //Create all files for posting files.
-        private void InitPostingFiles()
-        {
-            if (!Directory.Exists(_destPostingFiles))  // if it doesn't exist, create
-                Directory.CreateDirectory(_destPostingFiles);
-            System.IO.DirectoryInfo di = new DirectoryInfo(_destPostingFiles);
-
-            foreach (FileInfo file in di.GetFiles())
-            {
-                if(file.Name != MainDictionaryFileNameStemming && file.Name != MainDictionaryFileNameWithoutStemming)
-                file.Delete();
-            }
-            string fullPostingFilesPath;
-            for (int i = 0; i < NumOfPostingFiles; i++)
-            {
-                fullPostingFilesPath = _destPostingFiles + "\\" + i + ".txt";
-                if (!File.Exists(fullPostingFilesPath))
-                    using (StreamWriter sw = File.CreateText(fullPostingFilesPath)) { }
-            }
-        }
 
         // Create main dictionary which maps for every term its total frequencies, file name of posting file and ptr to row in file in which it`s stored.
         private void InitMainDictionary()
         {
-            splittedMainDictionary = new Dictionary<string, TermData>[NumOfPostingFiles];
-            for (int i = 0; i < NumOfPostingFiles; i++)
+            int numOfPostingFiles = PostingFilesAPI.NumOfPostingFiles;
+            splittedMainDictionary = new Dictionary<string, TermData>[numOfPostingFiles];
+            for (int i = 0; i < numOfPostingFiles; i++)
             {
                 splittedMainDictionary[i] = new Dictionary<string, TermData>();
             }
         }
         #endregion
 
-        /// <summary>
-        /// Update main dictionary and posting files for terms found in group of files.
-        /// </summary>
-        /// <param name="termsToIndex"></param>
-        private void IndexParsedTerms(TermFrequency[] termsToIndex)
-        {
-            int size = termsToIndex.Length;
-            TermFrequency termFreq;
-            //For each term:
-            for (int termIndex = 0; termIndex < size; termIndex++)
-            {
-                termFreq = termsToIndex[termIndex];
-                // Find the posting file where term should be saved.
-                int postingFileName = MatchPostingFileToTerm(termFreq.Term);
-                // Find the sub-dictionary of main dictionary where term should be saved.
-                Dictionary<string, TermData> correlatedDictionary = splittedMainDictionary[postingFileName];
-                // If main dictionary doesn`t contain term - create new entry
-                if (!correlatedDictionary.ContainsKey(termFreq.Term))
-                {
-                    correlatedDictionary[termFreq.Term] = new TermData(termFreq.Term,termFreq.DocumentFrequency, termFreq.CollectionFrequency, postingFileName, lastRowWrittenInFile[postingFileName]);
-                    lastRowWrittenInFile[postingFileName]++;
-                }
-                // Otherwise - update existant entry
-                else
-                {
-                    correlatedDictionary[termFreq.Term].DocumentFrequency += termFreq.DocumentFrequency;
-                    correlatedDictionary[termFreq.Term].CollectionFrequency += termFreq.CollectionFrequency;
-                }
-                // Assign the term its posting file name and its row in file.
-                termFreq.PostingFileName = postingFileName;
-                termFreq.RowInPostFile = correlatedDictionary[termFreq.Term].PtrToFile;
-                termsToIndex[termIndex] = termFreq;
-
-            }
-            // Begin update posting files: sort terms by there posting files name, and then by their row in posting files.
-            termsToIndex = termsToIndex.OrderBy(term => term.PostingFileName).ThenBy(term => term.RowInPostFile).ToArray<TermFrequency>();
-            int i = 0;
-            TermFrequency termToIndex;
-            // For each term:
-            while (i < size)
-            {
-
-                termToIndex = termsToIndex[i];
-
-                int fileName = termToIndex.PostingFileName;
-                // Rename the exiting posting file, and create a new file which will replace current file.
-                string postfileDestPath = _destPostingFiles + "\\" + fileName + ".txt";
-                string duplicatePostingFileDestPath = _destPostingFiles + "\\" + fileName + "_duplicate" + ".txt";
-                try
-                {
-                    File.Move(postfileDestPath, duplicatePostingFileDestPath);
-
-                }
-                catch
-                {
-                    File.Delete(duplicatePostingFileDestPath);
-                    return;
-                }
-                int fileCursor = 0;
-                string sourcePostingFileEntry = null;
-                // Read from old posting file, and write to new one:
-                using (BinaryReader sourcePostingFile = new BinaryReader(File.Open(duplicatePostingFileDestPath, FileMode.Open)))
-                {
-                    using (BinaryWriter targetPostingFile = new BinaryWriter(File.Create(postfileDestPath)))
-                    {
-                        // As long terms belong to same file:
-                        while (i < size && (termToIndex = termsToIndex[i]).PostingFileName == fileName)
-                        {
-                            int rowToUpdate = termToIndex.RowInPostFile;
-                            // write all rows from posting file which doesn`t need to be updated to new file.
-                            while (sourcePostingFile.BaseStream.Position != sourcePostingFile.BaseStream.Length & fileCursor < rowToUpdate)
-                            {
-                                    sourcePostingFileEntry = sourcePostingFile.ReadString();
-                                    targetPostingFile.Write(sourcePostingFileEntry);
-                                    fileCursor++;
-                            }
-                            // If old file isn`t over -  read the entry of term in old posting file, update it, and write it to new posting file.
-                            if (sourcePostingFile.BaseStream.Position != sourcePostingFile.BaseStream.Length)
-                            {
-                                sourcePostingFileEntry = sourcePostingFile.ReadString();
-                                sourcePostingFileEntry = TermFrequency.AddFrequenciesToString(sourcePostingFileEntry, termToIndex.FrequenciesInDocuments);
-                                targetPostingFile.Write(sourcePostingFileEntry);
-                                fileCursor++;
-                            }
-                            // If file is over - it means that no previous entry in file of this term  exists - write the frequencies of current group of files.
-                            else
-                            {
-                                targetPostingFile.Write(termToIndex.FrequenciesInDocuments);
-                            }
-                            i++;
-
-
-                        }
-                    }
-                }
-                // Remove old version of file.
-                File.Delete(duplicatePostingFileDestPath);
-            }
-
-        }
+       
 
         /// <summary>
         /// Merge sub-dictionaries to one sorted dictionary
@@ -375,10 +235,10 @@ namespace SearchEngine
                 System.IO.File.Delete(fullPath);
                 DictionaryData dictionaryData = new DictionaryData(this);
                 using (var outputFile = new FileStream(fullPath, FileMode.CreateNew))
-                using (var compressionStream = new GZipStream(outputFile, CompressionMode.Compress))
+                //using (var compressionStream = new GZipStream(outputFile, CompressionMode.Compress))
                 {
-                    formatter.Serialize(compressionStream, dictionaryData);
-                    compressionStream.Flush();
+                    formatter.Serialize(outputFile, dictionaryData);
+                    outputFile.Flush();
                 }
             }
             catch
@@ -388,16 +248,6 @@ namespace SearchEngine
 
         }
 
-        /// <summary>
-        /// Match term its posting file (hash function term->number)
-        /// </summary>
-        /// <param name="term"></param>
-        /// <returns></returns>
-        private int MatchPostingFileToTerm(string term)
-        {
-            int ans = (int)Math.Ceiling((double)(term[0] - minCharValue ) / (double)(charIntervalForPostingFile));
-            return Math.Max(Math.Min(ans, NumOfPostingFiles - 1), 0);
-        }
 
         /// <summary>
         /// Load main dictionary from memory
@@ -411,18 +261,18 @@ namespace SearchEngine
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameStemming;
             else
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameWithoutStemming;
-            progress = 0;
-            status = "Reading main dictionary data file";
+            Progress = 0;
+            Status = "Reading main dictionary data file";
             var formatter = new BinaryFormatter();
             DictionaryData dictionaryData;
             try
             {
                 using (var outputFile = new FileStream(fullPath, FileMode.Open))
-                using (var compressionStream = new GZipStream(
-                                         outputFile, CompressionMode.Decompress))
+                //using (var compressionStream = new GZipStream(
+                //                         outputFile, CompressionMode.Decompress))
                 {
-                    dictionaryData = (DictionaryData)formatter.Deserialize(compressionStream);
-                    compressionStream.Flush();
+                    dictionaryData = (DictionaryData)formatter.Deserialize(outputFile);
+                    outputFile.Flush();
                 }
             }
             catch
@@ -431,15 +281,14 @@ namespace SearchEngine
             }
 
             splittedMainDictionary = dictionaryData._splittedMainDictionary;
-            lastRowWrittenInFile = dictionaryData._lastRowWrittenInFile;
             //MainDictionary = dictionaryData._mainDictionary;
-            status = "Merging sub-dictionaries to main dictionary";
+            Status = "Merging sub-dictionaries to main dictionary";
             DocLanguages = dictionaryData._docLanguages;
             _documnentsData = dictionaryData._docData;
             MergeSplittedDictionaries();
             InitDocumentsData();
-            status = "Done";
-            progress = 1;
+            Status = "Done";
+            Progress = 1;
             return true;
         }
 
@@ -453,7 +302,7 @@ namespace SearchEngine
 
         public Searcher GetSearcher()
         {
-            return new Searcher(splittedMainDictionary, _documnentsData, NumOfPostingFiles, ParserFactor, _destPostingFiles);
+            return new Searcher(splittedMainDictionary, _documnentsData,_postingFilesAPI);
         }
 
         [Serializable]
@@ -462,10 +311,6 @@ namespace SearchEngine
             // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
             // ptr to file (row number in which term is stored)
             internal Dictionary<string, TermData>[] _splittedMainDictionary;
-            // Saves what is the last row that was written in each posting file (so you can know what is the next availabe row infile)
-            internal Dictionary<int, int> _lastRowWrittenInFile;
-            //Path for directory in which postinf files will be saved.
-            //internal ObservableCollection<TermData> _mainDictionary;
             internal ObservableCollection<string> _docLanguages;
             internal  Dictionary<string, DocumentData> _docData;
 
@@ -473,8 +318,6 @@ namespace SearchEngine
             public DictionaryData(Indexer indexer)
             {
                 _splittedMainDictionary = indexer.splittedMainDictionary;
-                _lastRowWrittenInFile = indexer.lastRowWrittenInFile;
-                //_mainDictionary = indexer.MainDictionary;
                 _docLanguages = indexer.DocLanguages;
                 _docData = indexer._documnentsData;
             }

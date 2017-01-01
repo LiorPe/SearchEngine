@@ -38,6 +38,7 @@ namespace GUI
         Boolean loadSuccess;
         bool uploaded = false;
         Searcher searcher;
+        PostingFilesAPI _postingFilesAPI;
 
         /// <summary>
         /// Ctor for the MainWindow
@@ -74,7 +75,8 @@ namespace GUI
             }
             src = srcPath.Text;
             dest = destPath.Text;
-            idx = new Indexer(dest, dest, Mode.Create);
+            _postingFilesAPI = new PostingFilesAPI(10, dest);
+            idx = new Indexer(dest, Mode.Create,_postingFilesAPI);
             hasIndex = true;
             //run backgroundworker for the actual process
             BackgroundWorker worker = new BackgroundWorker();
@@ -261,7 +263,8 @@ namespace GUI
                 return;
             }
             dest = destPath.Text;
-            idx = new Indexer(dest, dest, Mode.Load);
+            _postingFilesAPI = new PostingFilesAPI(10, dest);
+            idx = new Indexer(dest, Mode.Load, _postingFilesAPI);
             hasIndex = true;
             //call backgroundworker for the actual loading process
             BackgroundWorker worker = new BackgroundWorker();

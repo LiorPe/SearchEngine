@@ -40,15 +40,15 @@ namespace GUI
                 if (e.PropertyName == "Status")
                     this.Dispatcher.Invoke(() =>
                     {
-                        statusTB.Text = ((Indexer)sender).status;
+                        statusTB.Text = ((Indexer)sender).Status;
                     });
                 //update progress on property change notification
                 if (e.PropertyName == "Progress")
                 this.Dispatcher.Invoke(() =>
                 {
-                    pBar.Value = ((Indexer)sender).progress;
-                    pBarPercent.Text = Convert.ToInt32(((Indexer)sender).progress*100).ToString() +"%";
-                    if (Convert.ToInt32(((Indexer)sender).progress * 100) == 100)
+                    pBar.Value = ((Indexer)sender).Progress;
+                    pBarPercent.Text = Convert.ToInt32(((Indexer)sender).Progress * 100).ToString() +"%";
+                    if (Convert.ToInt32(((Indexer)sender).Progress * 100) == 100)
                     {
                         ///kill window when progress==100
                         DialogResult = true;

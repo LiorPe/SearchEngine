@@ -34,7 +34,7 @@ namespace GUI
             DataContext = "index";
             this.Dispatcher.Invoke(() =>
             {
-                statusTB.Text = index.status;
+                statusTB.Text = index.Status;
             });
             index.PropertyChanged += delegate (Object sender, PropertyChangedEventArgs e)
             {
@@ -42,9 +42,9 @@ namespace GUI
                 if (e.PropertyName == "Status")
                     this.Dispatcher.Invoke(() =>
                     {
-                        statusTB.Text = ((Indexer)sender).status;
+                        statusTB.Text = ((Indexer)sender).Status;
                         //kill window if given the proper notification
-                        if (index.status == "Done")
+                        if (index.Status == "Done")
                             Close();
                     });
             };

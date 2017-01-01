@@ -51,6 +51,7 @@
     <Compile Include="Indexer.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="PostingFileRecord.cs" />
+    <Compile Include="PostingFilesAPI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Searcher.cs" />
     <Compile Include="Stemmer.cs" />
