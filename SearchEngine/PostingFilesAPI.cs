@@ -57,6 +57,13 @@ namespace SearchEngine
                 // _destPostingFiles + "\\" + i + ".txt";
                 fullPostingFilesPath = GetFilePathName(i);
                 if (!File.Exists(fullPostingFilesPath))
+                    File.Delete(fullPostingFilesPath);
+            }
+            for (int i = 0; i < NumOfPostingFiles; i++)
+            {
+                // _destPostingFiles + "\\" + i + ".txt";
+                fullPostingFilesPath = GetFilePathName(i);
+                if (!File.Exists(fullPostingFilesPath))
                     using (StreamWriter sw = File.CreateText(fullPostingFilesPath)) { }
             }
         }

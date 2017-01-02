@@ -48,6 +48,8 @@ namespace GUI
         ObservableCollection<LanguageSelection> languageSelected;
         DocumentRank[] rankedDocument;
         static char[] QuerrySplitters = new char[] { ' ', '\t' };
+        bool searchDone = false;
+        double w1=2;
 
         /// <summary>
         /// Ctor for the MainWindow
@@ -582,6 +584,7 @@ namespace GUI
                 SearchFileQuery();
             }
             dataGridResults.ItemsSource = new ObservableCollection<DocumentRank>(rankedDocument);
+            searchDone = true;
 
         }
 
@@ -637,6 +640,98 @@ namespace GUI
                 }
             }
             return chosenLanguages;
+        }
+
+        private void SaveResultsToFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (!searchDone)
+            {
+                System.Windows.MessageBox.Show("Please searh a query first.");
+                return;
+            }
+            SaveFileDialog win = new SaveFileDialog();
+            win.Filter = "txt files (*.txt)|*.txt";
+
+            DialogResult result = win.ShowDialog();
+            if (result == System.Windows.Forms.DialogResult.OK)
+            {
+                int resultsCount = rankedDocument.Length;
+                string[] queriesRecords = new string[resultsCount];
+                for(int i = 0; i< resultsCount; i++)
+                {
+                    queriesRecords[i] = rankedDocument[i].ToString();
+                }
+                File.WriteAllLines(win.FileName, queriesRecords);
+            }
+            
+        }
+
+        private void Test_Click(object sender, RoutedEventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace(txtbxUserQuery.Text) && String.IsNullOrWhiteSpace(txtbxFileQuery.Text))
+            {
+                System.Windows.MessageBox.Show("Please submit or upload a query");
+                return;
+            }
+            string target = @"C:\IR\";
+            DirectoryInfo d = new DirectoryInfo(target);
+            FileInfo[] Files = d.GetFiles();
+            foreach (FileInfo file in Files)
+            {
+                try
+                {
+                    if (file.Name != "treceval.exe" && file.Name != "qrels.txt")
+                        File.Delete(target + file.Name);
+                }
+                catch
+                {
+
+                }
+            }
+            string stopwords;
+            src = srcPath.Text;
+            if (src[src.Length - 1] == '\\')
+                stopwords = src + "stop_words.txt";
+            else stopwords = src + "\\stop_words.txt";
+            Parser.InitStopWords(stopwords);
+            for (double w=1; w<=1; w += 0.5)
+            {
+                w1 = w;
+                rankedDocument = new DocumentRank[0];
+                SearchFileQuery();
+                int resultsCount = rankedDocument.Length;
+                string[] queriesRecords = new string[resultsCount];
+                for (int i = 0; i < resultsCount; i++)
+                {
+                    queriesRecords[i] = rankedDocument[i].ToString();
+                }
+                string fileName = String.Format("results.txt");
+                string filePath = String.Format(@"C:\IR\{0}", fileName);
+                File.WriteAllLines(filePath, queriesRecords);
+
+
+                Process p = new Process();
+                ProcessStartInfo info = new ProcessStartInfo();
+                info.FileName = "cmd.exe";
+                info.RedirectStandardInput = true;
+                info.UseShellExecute = false;
+
+                p.StartInfo = info;
+                p.Start();
+
+                using (StreamWriter sw = p.StandardInput)
+                {
+                    if (sw.BaseStream.CanWrite)
+                    {
+                        sw.WriteLine(@"cd C:\IR");
+                        sw.WriteLine(String.Format("treceval qrels.txt {0} > output_{0}", fileName));
+                    }
+                }
+
+
+            }
+            System.Windows.MessageBox.Show("Test is done");
+
         }
     }
 }

@@ -20,6 +20,11 @@ namespace SearchEngine.Ranking
             DocumentNo = documentNo;
             Score = score;
         }
+        public override string ToString()
+        {
+            //query_id, iter, docno, rank, sim, run_id
+            return String.Format("{0} {1} {2} {3} {4} {5}", QueryId, 0, DocumentNo, Rank, Score, "user"); 
+        }
 
     }
 }

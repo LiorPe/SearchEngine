@@ -11,8 +11,10 @@ namespace SearchEngine.Ranking
         public double k1 = 1.2;
         public double k2 = 100;
         public double b = 0.75;
+        public double w1 = 2;
         Dictionary<string, DocumentData> _documents;
         Dictionary<string, TermData>[] _splittedMainDictionary;
+        int resultsToRetrieve = 30;
 
         public Ranker(Dictionary<string, DocumentData> documents, Dictionary<string, TermData>[] splittedMainDictionary)
         {
@@ -38,11 +40,16 @@ namespace SearchEngine.Ranking
             double N = _documents.Count();
             // Check if can find relevent documents fo query
             double R = 0;
+
             foreach (string docNum in releventDocuments)
-                documentRanking[docNum] = CalCulateRankOfDocument(termsInQuery, docNum, releventPostingFilesRecords, R, avgDocumentLength, N);
+            {
+                documentRanking[docNum] = BM25(termsInQuery, docNum, releventPostingFilesRecords, R, avgDocumentLength, N);
+                documentRanking[docNum] += w1 * TitleRank(termsInQuery, docNum);
+            }
+
 
             var sortedRank = documentRanking.OrderByDescending(i => i.Value);
-            int numOfResults = Math.Min(50, sortedRank.Count());
+            int numOfResults = Math.Min(resultsToRetrieve, sortedRank.Count());
             DocumentRank[] sortedRankedDocuments = new DocumentRank[previousRankedDocuments.Length + numOfResults];
             int rankIndexer = 0;
             for (int i=0;i< previousRankedDocuments.Length;i++, rankIndexer++)
@@ -58,20 +65,21 @@ namespace SearchEngine.Ranking
             return sortedRankedDocuments;
         }
 
-        private double CalCulateRankOfDocument(Dictionary<string, int> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords,double R,double avgDocumentLength,double N)
+        private double BM25(Dictionary<string, int> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords,double R,double avgDocumentLength,double N)
         {
             double documentLength = _documents[docNum].DocumentLength;
             double docRank = 0;
             foreach (string termInQuery in termsInQuery.Keys)
             {
                 // Check if can find relevent documents fo term
-                double r = 0;
+                
                 double n = releventPostingFilesRecords[termInQuery].DF.Count();
                 double f;
                 if (releventPostingFilesRecords[termInQuery].DF.ContainsKey(docNum))
                     f = releventPostingFilesRecords[termInQuery].DF[docNum];
                 else
                     f = 0;
+                double r = 0;
                 double qf = termsInQuery[termInQuery];
 
                 double K = k1 * ((1 - b) + b * documentLength / avgDocumentLength);
@@ -83,6 +91,29 @@ namespace SearchEngine.Ranking
                 docRank += Math.Max(termContributionToRank,0);
             }
             return docRank;
+        }
+        private double TitleRank(Dictionary<string, int> termsInQuery , string docNum)
+        {
+            double queryLength = 0;
+            foreach (int freq in termsInQuery.Values)
+                queryLength += freq;
+            Dictionary<string, int> titleTerms = _documents[docNum].TermsInTitle;
+            double titleLength = 0;
+            foreach (int freq in titleTerms.Values)
+                titleLength += freq;
+            double rank=0;
+            foreach (string term in termsInQuery.Keys)
+            {
+                double queryFreq = termsInQuery[term];
+                double titleFreq;
+                if (titleTerms.ContainsKey(term))
+                    titleFreq = titleTerms[term];
+                else
+                    titleFreq = 0;
+                rank += titleFreq / titleLength * queryFreq / queryLength;
+            }
+
+            return rank;
         }
     }
 }

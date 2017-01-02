@@ -124,7 +124,8 @@
 
                     </DataGrid.Columns>
                 </DataGrid>
-                <Button Content="Save Results To File" Grid.Row="18" Grid.Column="4" Grid.ColumnSpan="3"/>
+                <Button Content="Save Results To File" Grid.Row="18" Grid.Column="4" Grid.ColumnSpan="3" Click="SaveResultsToFile_Click"/>
+                <Button Content="Crazy mother fucker test" Grid.Row="18" Grid.Column="8" Grid.ColumnSpan="3" Click="Test_Click"/>
 
             </Grid>
         </TabItem>
