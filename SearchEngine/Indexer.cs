@@ -382,7 +382,7 @@ namespace SearchEngine
             int queryIndexer = 0;
             Dictionary<string, int> termsFrequencyInQuery = new Dictionary<string, int>() ;
             Parser.UseStemming = useStemming;
-            Parser.IterateTokens(ref queryIndexer, query, termsFrequencyInQuery);
+            Parser.IterateTokens(ref queryIndexer, query, termsFrequencyInQuery,false);
             return termsFrequencyInQuery;
         }
     }

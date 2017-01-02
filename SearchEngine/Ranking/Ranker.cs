@@ -9,7 +9,7 @@ namespace SearchEngine.Ranking
     public class Ranker
     {
         public double k1 = 1.2;
-        public double k2 = 500;
+        public double k2 = 100;
         public double b = 0.75;
         Dictionary<string, DocumentData> _documents;
         Dictionary<string, TermData>[] _splittedMainDictionary;
@@ -66,15 +66,21 @@ namespace SearchEngine.Ranking
             {
                 // Check if can find relevent documents fo term
                 double r = 0;
-                double n = releventPostingFilesRecords[termInQuery].DF.Count;
-                double f = releventPostingFilesRecords[termInQuery].DF[docNum];
+                double n = releventPostingFilesRecords[termInQuery].DF.Count();
+                double f;
+                if (releventPostingFilesRecords[termInQuery].DF.ContainsKey(docNum))
+                    f = releventPostingFilesRecords[termInQuery].DF[docNum];
+                else
+                    f = 0;
                 double qf = termsInQuery[termInQuery];
 
                 double K = k1 * ((1 - b) + b * documentLength / avgDocumentLength);
-                double termContributionToRank = (r + 0.5) / (R - r + 0.5) * (k1 + 1) * f * (k2 + 1) * qf;
-                termContributionToRank = termContributionToRank / (n - r + 0.5) / (N - n - R + r + 0.5) / (K + f) / (k2 + qf);
-                termContributionToRank = Math.Log(termContributionToRank);
-                docRank += termContributionToRank;
+
+                double termContributionToRank;
+                termContributionToRank = Math.Log ( ( (r + 0.5) / (R - r + 0.5) ) / ( (n - r + 0.5) / (N - n - R + r + 0.5) ) );
+                termContributionToRank = termContributionToRank * (k1 + 1) * f / (K + f);
+                termContributionToRank = termContributionToRank * (k2 + 1) * qf / (k2 + qf);
+                docRank += Math.Max(termContributionToRank,0);
             }
             return docRank;
         }

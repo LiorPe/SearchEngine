@@ -158,7 +158,7 @@ namespace SearchEngine
         /// <param name="_termFrequencies">Maps terms to their frequencies in current document</param>
         /// <param name="_frquenciesOfMostFrequentTerm">How many times the most frequent term appeared.</param>
         /// <param name="_mostFrequentTerm"> Most frequent term</param>
-        public static void IterateTokens(ref int fileIndexer, string[] file,Dictionary<string,int> termFrequencies)
+        public static void IterateTokens(ref int fileIndexer, string[] file,Dictionary<string,int> termFrequencies,bool GenerateSuggestion=true)
         {
 
             string[] splittedToken;
@@ -200,7 +200,7 @@ namespace SearchEngine
                             {
                                 subtoken = splittedToken[i];
                                 UpdateTermsFrequenciesInCurrentDocument(subtoken, termFrequencies);
-                                if (i+1< splittedToken.Length)
+                                if (i+1< splittedToken.Length && GenerateSuggestion)
                                 {
                                     UpdateTermAutoCpmpletion(subtoken, splittedToken[i + 1]);
                                 }
@@ -210,7 +210,8 @@ namespace SearchEngine
                                     
                     }
                 }
-                UpdateTermAutoCpmpletion(previousTerm, currentTerm);
+                if (GenerateSuggestion)
+                    UpdateTermAutoCpmpletion(previousTerm, currentTerm);
                 previousTerm = currentTerm;
                 currentTerm =null;
                 fileIndexer++;

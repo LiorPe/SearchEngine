@@ -172,7 +172,12 @@ namespace GUI
             }
             src = srcPath.Text;
             dest = destPath.Text;
-            _postingFilesAPI = new PostingFilesAPI(10, dest);
+
+            if ((bool)stemCheck.IsChecked)
+                stemming = true;
+            else
+                stemming = false;
+            _postingFilesAPI = new PostingFilesAPI(10, dest, stemming);
             idx = new Indexer(dest, Mode.Create, _postingFilesAPI);
             hasIndex = true;
             //run backgroundworker for the actual process
@@ -374,7 +379,11 @@ namespace GUI
                 return;
             }
             dest = destPath.Text;
-            _postingFilesAPI = new PostingFilesAPI(10, dest);
+            if ((bool)stemCheck.IsChecked)
+                stemming = true;
+            else
+                stemming = false;
+            _postingFilesAPI = new PostingFilesAPI(10, dest,stemming);
             idx = new Indexer(dest, Mode.Load, _postingFilesAPI);
             hasIndex = true;
             //call backgroundworker for the actual loading process
@@ -559,10 +568,11 @@ namespace GUI
             }
             rankedDocument = new DocumentRank[0];
             string stopwords;
+            src = srcPath.Text;
             if (src[src.Length - 1] == '\\')
                 stopwords = src + "stop_words.txt";
             else stopwords = src + "\\stop_words.txt";
-            Parser.InitStopWords(src);
+            Parser.InitStopWords(stopwords);
             if (!String.IsNullOrWhiteSpace(txtbxUserQuery.Text))
             {
                 SearchQuery(txtbxUserQuery.Text.Split(QuerrySplitters),"295");

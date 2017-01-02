@@ -17,13 +17,15 @@ namespace SearchEngine
         const int _minCharValue = 'a';
         // Saves what is the last row that was written in each posting file (so you can know what is the next availabe row infile)
         Dictionary<int, int> _lastRowWrittenInFile;
+        bool _useStemming;
 
-        public PostingFilesAPI(int numOfPostingFiles, string destPostingFiles)
+        public PostingFilesAPI(int numOfPostingFiles, string destPostingFiles,bool useStemming)
         {
             NumOfPostingFiles = numOfPostingFiles;
             _destPostingFiles = destPostingFiles;
             _charIntervalForPostingFile = (int)Math.Ceiling((double)_charValuesRange / (double)NumOfPostingFiles);
             InitLastRowWrittenInFile();
+            _useStemming = useStemming;
         }
 
         //init dictionary whichmaps the posting file and the last availabe row
@@ -52,7 +54,8 @@ namespace SearchEngine
             string fullPostingFilesPath;
             for (int i = 0; i < NumOfPostingFiles; i++)
             {
-                fullPostingFilesPath = _destPostingFiles + "\\" + i + ".txt";
+                // _destPostingFiles + "\\" + i + ".txt";
+                fullPostingFilesPath = GetFilePathName(i);
                 if (!File.Exists(fullPostingFilesPath))
                     using (StreamWriter sw = File.CreateText(fullPostingFilesPath)) { }
             }
@@ -113,7 +116,7 @@ namespace SearchEngine
 
                 int fileName = termToIndex.PostingFileName;
                 // Rename the exiting posting file, and create a new file which will replace current file.
-                string postfileDestPath = _destPostingFiles + "\\" + fileName + ".txt";
+                string postfileDestPath = GetFilePathName(fileName);
                 string duplicatePostingFileDestPath = _destPostingFiles + "\\" + fileName + "_duplicate" + ".txt";
                 try
                 {
@@ -192,7 +195,7 @@ namespace SearchEngine
                 int fileName = termToExtract.PostingFileName;
                 int fileCursor = 0;
                 string postingFileEntry = null;
-                string postfileDestPath = _destPostingFiles + "\\" + fileName + ".txt";
+                string postfileDestPath = GetFilePathName(fileName);
 
                 // Read from old posting file, and write to new one:
                 using (BinaryReader sourcePostingFile = new BinaryReader(File.Open(postfileDestPath, FileMode.Open)))
@@ -221,6 +224,20 @@ namespace SearchEngine
                 }
             }
             return extractedRecordsFromPostingFiles;
+        }
+
+        public string GetFilePathName(int i)
+        {
+            string fullPostingFilesPath;
+            if (_useStemming)
+                fullPostingFilesPath = _destPostingFiles + "\\" + i + "stemming.txt";
+            else
+            {
+                fullPostingFilesPath = _destPostingFiles + "\\" + i + "noStemming.txt";
+            }
+            return fullPostingFilesPath;
+
+
         }
     }
 }
