@@ -30,9 +30,7 @@ namespace SearchEngine.Ranking
                 foreach (string document in record.DF.Keys)
                 {
                     if (!releventDocuments.Contains(document) && (!considerLanguages || chosenLanguages.Contains(_documents[document].Language) ) )
-                    {
                         releventDocuments.Add(document);
-                    }
                 }
             }
 
@@ -41,24 +39,7 @@ namespace SearchEngine.Ranking
             // Check if can find relevent documents fo query
             double R = 0;
             foreach (string docNum in releventDocuments)
-            {
-                double documentLength = _documents[docNum].DocumentLength;
-                double docRank = 0;
-                foreach (string termInQuery in termsInQuery.Keys){
-                    // Check if can find relevent documents fo term
-                    double r = 0;
-                    double n = releventPostingFilesRecords[termInQuery].DF.Count;
-                    double f = releventPostingFilesRecords[termInQuery].DF[docNum];
-                    double qf = termsInQuery[termInQuery];
-
-                    double K = k1 * ((1 - b) + b * documentLength / avgDocumentLength);
-                    double termContributionToRank = (r + 0.5) / (R - r + 0.5) * (k1 + 1) * f * (k2 + 1) * qf;
-                    termContributionToRank = termContributionToRank / (n - r + 0.5) / (N - n - R + r + 0.5) / (K + f) / (k2 + qf);
-                    termContributionToRank = Math.Log(termContributionToRank);
-                    docRank += termContributionToRank;
-                }
-                documentRanking[docNum] = docRank;
-            }
+                documentRanking[docNum] = CalCulateRankOfDocument(termsInQuery, docNum, releventPostingFilesRecords, R, avgDocumentLength, N);
 
             var sortedRank = documentRanking.OrderByDescending(i => i.Value);
             int numOfResults = Math.Min(50, sortedRank.Count());
@@ -75,6 +56,27 @@ namespace SearchEngine.Ranking
             }
 
             return sortedRankedDocuments;
+        }
+
+        private double CalCulateRankOfDocument(Dictionary<string, int> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords,double R,double avgDocumentLength,double N)
+        {
+            double documentLength = _documents[docNum].DocumentLength;
+            double docRank = 0;
+            foreach (string termInQuery in termsInQuery.Keys)
+            {
+                // Check if can find relevent documents fo term
+                double r = 0;
+                double n = releventPostingFilesRecords[termInQuery].DF.Count;
+                double f = releventPostingFilesRecords[termInQuery].DF[docNum];
+                double qf = termsInQuery[termInQuery];
+
+                double K = k1 * ((1 - b) + b * documentLength / avgDocumentLength);
+                double termContributionToRank = (r + 0.5) / (R - r + 0.5) * (k1 + 1) * f * (k2 + 1) * qf;
+                termContributionToRank = termContributionToRank / (n - r + 0.5) / (N - n - R + r + 0.5) / (K + f) / (k2 + qf);
+                termContributionToRank = Math.Log(termContributionToRank);
+                docRank += termContributionToRank;
+            }
+            return docRank;
         }
     }
 }
