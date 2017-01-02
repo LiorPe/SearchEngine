@@ -35,9 +35,10 @@ namespace SearchEngine
 
         }
 
-        public List<PostingFileRecord> FindReleventDocuments(Dictionary<string, int> parsedQuery)
+        public Dictionary<string,PostingFileRecord> FindReleventDocuments(Dictionary<string, int> parsedQuery)
         {
-            throw new NotImplementedException();
+            List<PostingFileRecord> releventPostingFilesRecord = new List<PostingFileRecord>();
+            return _postingFilesAPI.ExtractPostingFileRecords(parsedQuery.Keys.ToArray(), _splittedMainDictionary, false);
         }
     }
 }

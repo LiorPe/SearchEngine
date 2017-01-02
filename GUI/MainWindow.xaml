@@ -114,11 +114,14 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <Button Content="Search Your Query" Grid.Row="9" Grid.Column="4" Grid.ColumnSpan="3" Click="SearchQuery_Click"/>
-                <Label Content="Resulrts:" FontSize="20" FontWeight="SemiBold" Grid.Row="10" Grid.Column="4" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                <DataGrid  Grid.Row="11" Grid.Column="2" Grid.ColumnSpan="7" AutoGenerateColumns="False" Grid.RowSpan="6">
+                <Label Content="Resulrts:" FontSize="20" FontWeight="SemiBold" Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <DataGrid x:Name="dataGridResults" Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="9" AutoGenerateColumns="False" Grid.RowSpan="6" FontSize="18" IsReadOnly="True">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Rank" FontSize="18" Width="*"/>
-                        <DataGridTextColumn Header="Document" FontSize="18" Width="*"/>
+                        <DataGridTextColumn Header="Query Id" FontSize="18" Width="*" Binding="{Binding QueryId}" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Rank" FontSize="18" Width="*" Binding="{Binding Rank}" IsReadOnly="True" />
+                        <DataGridTextColumn Header="Document" FontSize="18" Width="*" Binding="{Binding DocumentNo}" IsReadOnly="True" />
+                        <DataGridTextColumn Header="Score" FontSize="18" Width="*" Binding="{Binding Score}" IsReadOnly="True" />
+
                     </DataGrid.Columns>
                 </DataGrid>
                 <Button Content="Save Results To File" Grid.Row="18" Grid.Column="4" Grid.ColumnSpan="3"/>

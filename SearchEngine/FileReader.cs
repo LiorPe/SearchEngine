@@ -12,6 +12,7 @@ namespace SearchEngine
     public static class FileReader
     {
         public static readonly char[] Splitters = {' ','\n'};
+
         public static string[] ReadTextFile(string path)
         {
             if (File.Exists(path))
@@ -22,6 +23,11 @@ namespace SearchEngine
             {
                 return null;
             }
+        }
+
+        public static string[] ReadQueryFile(string path)
+        {
+            return File.ReadAllText(path).Split('\n');
         }
     }
 }

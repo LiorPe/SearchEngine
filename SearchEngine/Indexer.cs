@@ -34,7 +34,7 @@ namespace SearchEngine
         public const string LanguagesFileNameWithoutStemming = "LanguagesWithoutStemming";
         public static HashSet<string> StemmingFiles = new HashSet<string>{ MainDictionaryFileNameStemming, DocumentsDataFileNameStemming, LanguagesFileNameStemming };
         public static HashSet<string> NoStemmingFiles=new HashSet<string> { MainDictionaryFileNameWithoutStemming, DocumentsDataFileNameWithoutStemming, LanguagesFileNameWithoutStemming };
-
+        public double AvgDocumentLength { get; set; }
     
 
         public ObservableCollection<string> DocLanguages;
@@ -168,8 +168,19 @@ namespace SearchEngine
             Status = "Saving dictionary to file";
 
             SaveMainDictionaryToMemory(useStemming);
+            CalculateAverageDocumenbtLength();
             Progress = 1;
             
+        }
+
+        private void CalculateAverageDocumenbtLength()
+        {
+            double averageDocumentLength = 0;
+            foreach (DocumentData docData in DocumentsData.Values)
+            {
+                averageDocumentLength += docData.DocumentLength;
+            }
+            AvgDocumentLength = averageDocumentLength / (double)DocumentsData.Count;
         }
 
         //Find all languages exist in documents datas
@@ -306,6 +317,7 @@ namespace SearchEngine
             DocLanguages = (ObservableCollection<string>)LoadProeprtyFromFile(fullPath, out succeed);
             Status = "Merging main dictionary";
             MergeSplittedDictionaries();
+            CalculateAverageDocumenbtLength();
             Status = "Done";
             Progress = 1;
             return succeed;
@@ -365,13 +377,12 @@ namespace SearchEngine
             return new Ranker(DocumentsData,splittedMainDictionary);
         }
 
-        public Dictionary<string, int> ParseQuery(string query,bool useStemming)
+        public Dictionary<string, int> ParseQuery(string[] query,bool useStemming)
         {
-            string[] splittedQuery = query.Split(' ');
             int queryIndexer = 0;
             Dictionary<string, int> termsFrequencyInQuery = new Dictionary<string, int>() ;
             Parser.UseStemming = useStemming;
-            Parser.IterateTokens(ref queryIndexer, splittedQuery, termsFrequencyInQuery);
+            Parser.IterateTokens(ref queryIndexer, query, termsFrequencyInQuery);
             return termsFrequencyInQuery;
         }
     }

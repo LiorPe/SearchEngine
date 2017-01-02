@@ -46,7 +46,8 @@ namespace GUI
         PostingFilesAPI _postingFilesAPI;
         Dictionary<string, HashSet<string>> languages;
         ObservableCollection<LanguageSelection> languageSelected;
-        List<DocumentRank> rankedDocument;
+        DocumentRank[] rankedDocument;
+        static char[] QuerrySplitters = new char[] { ' ', '\t' };
 
         /// <summary>
         /// Ctor for the MainWindow
@@ -556,7 +557,7 @@ namespace GUI
             {
                 System.Windows.MessageBox.Show("Can`t search submitted query and fule query on the same time");
             }
-            rankedDocument = new List<DocumentRank>();
+            rankedDocument = new DocumentRank[0];
             string stopwords;
             if (src[src.Length - 1] == '\\')
                 stopwords = src + "stop_words.txt";
@@ -564,24 +565,68 @@ namespace GUI
             Parser.InitStopWords(src);
             if (!String.IsNullOrWhiteSpace(txtbxUserQuery.Text))
             {
-                SearchQuery(txtbxUserQuery.Text,"295");
+                SearchQuery(txtbxUserQuery.Text.Split(QuerrySplitters),"295");
             }
             if (!String.IsNullOrWhiteSpace(txtbxFileQuery.Text))
             {
                 SearchFileQuery();
             }
+            dataGridResults.ItemsSource = new ObservableCollection<DocumentRank>(rankedDocument);
+
         }
 
         private void SearchFileQuery()
         {
-            throw new NotImplementedException();
+            string fileQueryPath = txtbxFileQuery.Text;
+            if (!File.Exists(fileQueryPath))
+            {
+                System.Windows.MessageBox.Show("File chosen does not exist");
+                return;
+            }
+            string[] queries;
+            try
+            {
+                queries = FileReader.ReadQueryFile(fileQueryPath);
+
+            }
+            catch
+            {
+                System.Windows.MessageBox.Show("File could not be read, make sure it`s not used by another app");
+                return;
+            }
+            foreach (string query in queries)
+            {
+                string[] splittedQuery = query.Split(QuerrySplitters);
+                string queryId = splittedQuery[0];
+                splittedQuery[0] = String.Empty;
+                SearchQuery(splittedQuery, queryId);
+
+            }
         }
 
-        private void SearchQuery(string query, string queryID)
+        private void SearchQuery(string[] query, string queryID)
         {
-            Dictionary<string, int> parsedQuery = idx.ParseQuery(query, stemming);
-            List<PostingFileRecord> releventDocuments = searcher.FindReleventDocuments(parsedQuery);
-            rankedDocument = ranker.RankDocuments(query, queryID, releventDocuments, rankedDocument);
+            Dictionary<string, int> termsInQuery = idx.ParseQuery(query, stemming);
+            Dictionary<string, PostingFileRecord> releventDocuments = searcher.FindReleventDocuments(termsInQuery);
+            HashSet<string> chosenLanguages = ExtractChosenLanguages();
+            rankedDocument = ranker.RankDocuments(termsInQuery, queryID, releventDocuments, rankedDocument,idx.AvgDocumentLength, chosenLanguages);
+        }
+
+        private HashSet<string> ExtractChosenLanguages()
+        {
+            HashSet<string> chosenLanguages = new HashSet<string>();
+            foreach (LanguageSelection langSelection in languageSelected)
+            {
+                if (langSelection.Selected == true)
+                {
+                    HashSet<string> equivalentLanguages = languages[langSelection.Language];
+                    foreach (string equivalentLanguage in equivalentLanguages)
+                    {
+                        chosenLanguages.Add(equivalentLanguage);
+                    }
+                }
+            }
+            return chosenLanguages;
         }
     }
 }
