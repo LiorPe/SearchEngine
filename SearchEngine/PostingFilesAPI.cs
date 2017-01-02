@@ -38,7 +38,7 @@ namespace SearchEngine
         }
 
         //Create all files for posting files.
-        public void InitPostingFiles(string mainDictionaryFileNameStemming,string mainDictionaryFileNameWithoutStemming)
+        public void InitPostingFiles(HashSet<string> stemmingFiles, HashSet<string> noStemmingFiles)
         {
             if (!Directory.Exists(_destPostingFiles))  // if it doesn't exist, create
                 Directory.CreateDirectory(_destPostingFiles);
@@ -46,7 +46,7 @@ namespace SearchEngine
 
             foreach (FileInfo file in di.GetFiles())
             {
-                if (file.Name != mainDictionaryFileNameStemming && file.Name != mainDictionaryFileNameWithoutStemming)
+                if (!stemmingFiles.Contains(file.Name) && !noStemmingFiles.Contains(file.Name)) 
                     file.Delete();
             }
             string fullPostingFilesPath;

@@ -35,8 +35,9 @@ namespace SearchEngine
 
         }
 
-
-
-
+        public List<PostingFileRecord> FindReleventDocuments(Dictionary<string, int> parsedQuery)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

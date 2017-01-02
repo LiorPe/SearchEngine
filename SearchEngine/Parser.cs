@@ -11,7 +11,7 @@ namespace SearchEngine
 
         static int _fileIndexer;
         static string[] _file;
-        static bool _useStemming;
+        public static bool UseStemming;
         static int _documentLength;
         static Dictionary<string, int> _termFrequencies;
         static int _frquenciesOfMostFrequentTerm;
@@ -67,6 +67,8 @@ namespace SearchEngine
         private static HashSet<string> SufffixesOfNumbers = new HashSet<string>() { "%", "$", "m", "th", "st", "rd", "bn", String.Empty };
 
 
+        
+        
         #endregion
         /// <summary>
         /// Main funnction for parsing files.
@@ -77,7 +79,6 @@ namespace SearchEngine
         /// <param name="documentsData"> The documents found in files</param>
         public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex,  Dictionary<string, DocumentData> documentsData)
         {
-            _useStemming = useStemming;
             Dictionary<string, TermFrequency> termsFoundInFiles = new Dictionary<string, TermFrequency>();
             int numOfFiles = filePathes.Length;
             // for each file given to parser:
@@ -178,9 +179,9 @@ namespace SearchEngine
                     bool countFrequenciesSeperately = false;
                     bool avoidStopWords = false;
                     // Activate derivation laws on token, and return true if the token can be stemmed.
-                    bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, _useStemming, ref _documentLength, _termFrequencies, ref _frquenciesOfMostFrequentTerm, ref _mostFrequentTerm, ref avoidStopWords);
+                    bool tokenCanBeStemmed = ActivateDerivationLaws(ref token, file, ref fileIndexer, ref tokenRecursivelyParsed, ref countFrequenciesSeperately, UseStemming, ref _documentLength, _termFrequencies, ref _frquenciesOfMostFrequentTerm, ref _mostFrequentTerm, ref avoidStopWords);
                     // If need to use stemming,and token can be stemmed, stem the token
-                    if (_useStemming && tokenCanBeStemmed && !tokenRecursivelyParsed)
+                    if (UseStemming && tokenCanBeStemmed && !tokenRecursivelyParsed)
                         token = ActivateStemming(token);
                     // If token weren`t already parsed seperately (=tokenRecursivelyParsed) and token is not a stopword:
                     if (!tokenRecursivelyParsed && (!IsAStopWord(token) || avoidStopWords))

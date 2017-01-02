@@ -94,20 +94,26 @@
                 <Label Content="Submit Your Query:" FontSize="20" FontWeight="SemiBold" Grid.Row="1" Grid.Column="6" Grid.ColumnSpan="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 <Label Content="Load A Query File:" FontSize="20" FontWeight="SemiBold" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 <TextBox x:Name="txtbxUserQuery" FontSize="20" Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="4" VerticalAlignment="Bottom" TextChanged="UserQueryChanged" />
-                <ListBox x:Name="lstbxAutoComplet" Grid.Row="3" Grid.Column="6"  Grid.ColumnSpan="4" Grid.RowSpan="2" Visibility="Hidden" />
+                <ListBox x:Name="lstbxAutoComplet" Grid.Row="3" Grid.Column="6"  Grid.ColumnSpan="4" Grid.RowSpan="4" Visibility="Hidden" SelectionChanged="Suggestion_Click" />
                 <Label Content="or" FontSize="16" Grid.Row="1" Grid.Column="5" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
 
                 <TextBox x:Name="txtbxFileQuery" FontSize="20" FontWeight="SemiBold" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" VerticalAlignment="Bottom"/>
-                <Button Content="Browse..." Grid.Row="2" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                <Button Content="Browse..." Grid.Row="2" Grid.Column="5" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="BrowseQueryFile_Click"/>
 
-                <Label Content="Please Choose Languages For Query:" FontSize="20" FontWeight="SemiBold" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                <DataGrid  Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="7" AutoGenerateColumns="False" Grid.RowSpan="3">
+                <Label Content="Please Choose Languages For Query:" FontSize="20" FontWeight="SemiBold" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <DataGrid x:Name="datagridLanguageSelection" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" AutoGenerateColumns="False" Grid.RowSpan="3" HorizontalAlignment="Center">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Language" FontSize="18" Width="3*"/>
-                        <DataGridCheckBoxColumn Header="Select?" Binding="{Binding MyBool}" Width="*" />
+                        <DataGridTextColumn Header="Language" FontSize="18" Width="3*" Binding="{Binding Language}" IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="Select?" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-                <Button Content="Search Your Query" Grid.Row="9" Grid.Column="4" Grid.ColumnSpan="3"/>
+                <Button Content="Search Your Query" Grid.Row="9" Grid.Column="4" Grid.ColumnSpan="3" Click="SearchQuery_Click"/>
                 <Label Content="Resulrts:" FontSize="20" FontWeight="SemiBold" Grid.Row="10" Grid.Column="4" Grid.ColumnSpan="10" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 <DataGrid  Grid.Row="11" Grid.Column="2" Grid.ColumnSpan="7" AutoGenerateColumns="False" Grid.RowSpan="6">
                     <DataGrid.Columns>

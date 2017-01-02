@@ -10,11 +10,12 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using SearchEngine.Ranking;
 
 namespace SearchEngine
 {
     public enum Mode { Create ,Load };
-    public class Indexer: INotifyPropertyChanged
+    public class Indexer : INotifyPropertyChanged
     {
         // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
         // ptr to file (row number in which term is stored)
@@ -24,14 +25,20 @@ namespace SearchEngine
         string _mainDictionaryFilePath;
 
         public ObservableCollection<TermData> MainDictionary;
-        public ObservableCollection<DocumentData> DocumentsData;
 
-        public const string MainDictionaryFileNameStemming = "MainDictionaryStemming.zip";
-        public const string MainDictionaryFileNameWithoutStemming = "MainDictionaryWithoutStemming.zip";
+        public const string MainDictionaryFileNameStemming = "MainDictionaryStemming";
+        public const string MainDictionaryFileNameWithoutStemming = "MainDictionaryWithoutStemming";
+        public const string DocumentsDataFileNameStemming = "DocumentsDataStemming";
+        public const string DocumentsDataFileNameWithoutStemming = "DocumentsDataWithoutStemming";
+        public const string LanguagesFileNameStemming = "LanguagesStemming";
+        public const string LanguagesFileNameWithoutStemming = "LanguagesWithoutStemming";
+        public static HashSet<string> StemmingFiles = new HashSet<string>{ MainDictionaryFileNameStemming, DocumentsDataFileNameStemming, LanguagesFileNameStemming };
+        public static HashSet<string> NoStemmingFiles=new HashSet<string> { MainDictionaryFileNameWithoutStemming, DocumentsDataFileNameWithoutStemming, LanguagesFileNameWithoutStemming };
 
+    
 
         public ObservableCollection<string> DocLanguages;
-        private Dictionary<string, DocumentData> _documnentsData = new Dictionary<string, DocumentData>();
+        public Dictionary<string, DocumentData> DocumentsData = new Dictionary<string, DocumentData>();
 
         PostingFilesAPI _postingFilesAPI;
 
@@ -89,7 +96,7 @@ namespace SearchEngine
             if (mode == Mode.Create)
             {
                 InitMainDictionary();
-                _postingFilesAPI.InitPostingFiles(MainDictionaryFileNameStemming, MainDictionaryFileNameWithoutStemming);
+                _postingFilesAPI.InitPostingFiles(StemmingFiles,NoStemmingFiles);
             }
 
 
@@ -147,7 +154,7 @@ namespace SearchEngine
                 }
                 Status = String.Format("Parsing files: {0}", filesBeingProccessed);
                 // Parse group of files and information of terms and documents in files.
-                Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, _documnentsData);
+                Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, DocumentsData);
                 Status = String.Format("Indexing files: {0}", filesBeingProccessed);
                 // Index returned terms
                 _postingFilesAPI.UpdateTermsInPostingFiles(termsFrequencies,splittedMainDictionary);
@@ -156,7 +163,6 @@ namespace SearchEngine
             }
             Status = "Merging main dictionary"; 
             MergeSplittedDictionaries();
-            InitDocumentsData();
             Status = "Finding all languages exist in courpus";
             ExtractLanguages();
             Status = "Saving dictionary to file";
@@ -170,7 +176,7 @@ namespace SearchEngine
         private void ExtractLanguages()
         {
             HashSet<string> languages = new HashSet<string>();
-            foreach (DocumentData docData in _documnentsData.Values)
+            foreach (DocumentData docData in DocumentsData.Values)
             {
                 string language = docData.Language;
                 if (language!=String.Empty && !languages.Contains(language))
@@ -224,20 +230,42 @@ namespace SearchEngine
         /// <param name="useStemming"></param>
         public void SaveMainDictionaryToMemory(bool useStemming)
         {
-            var formatter = new BinaryFormatter();
             string fullPath;
             if (useStemming)
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameStemming;
             else
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameWithoutStemming;
+            Status = "Saving main dictionary";
+            SavePropertyToFile(splittedMainDictionary, fullPath);
+            if (useStemming)
+                fullPath = _mainDictionaryFilePath + "\\" + DocumentsDataFileNameStemming;
+            else
+                fullPath = _mainDictionaryFilePath + "\\" + DocumentsDataFileNameWithoutStemming;
+            Status = "Saving documents data";
+            SavePropertyToFile(DocumentsData, fullPath);
+            if (useStemming)
+                fullPath = _mainDictionaryFilePath + "\\" + LanguagesFileNameStemming;
+            else
+                fullPath = _mainDictionaryFilePath + "\\" + LanguagesFileNameWithoutStemming;
+            Status = "Saving languages";
+            SavePropertyToFile(DocLanguages, fullPath);
+
+
+        }
+
+        public void SavePropertyToFile(object obj,string fullPath)
+        {
+            var formatter = new BinaryFormatter();
+
             try
             {
                 System.IO.File.Delete(fullPath);
-                DictionaryData dictionaryData = new DictionaryData(this);
+                //DictionaryData dictionaryData = new DictionaryData(this);
+
                 using (var outputFile = new FileStream(fullPath, FileMode.CreateNew))
                 //using (var compressionStream = new GZipStream(outputFile, CompressionMode.Compress))
                 {
-                    formatter.Serialize(outputFile, dictionaryData);
+                    formatter.Serialize(outputFile, obj);
                     outputFile.Flush();
                 }
             }
@@ -245,7 +273,6 @@ namespace SearchEngine
             {
                 return;
             }
-
         }
 
 
@@ -257,52 +284,61 @@ namespace SearchEngine
         public bool LoadMainDictionaryFromMemory(bool useStemming)
         {
             string fullPath;
+            bool succeed;
             if (useStemming)
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameStemming;
             else
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameWithoutStemming;
-            Progress = 0;
-            Status = "Reading main dictionary data file";
+            Status = "Loading main dictionary";
+
+            splittedMainDictionary =  (Dictionary<string,TermData>[]) LoadProeprtyFromFile(fullPath, out succeed);
+            if (useStemming)
+                fullPath = _mainDictionaryFilePath + "\\" + DocumentsDataFileNameStemming;
+            else
+                fullPath = _mainDictionaryFilePath + "\\" + DocumentsDataFileNameWithoutStemming;
+            Status = "Loading document data";
+            DocumentsData = (Dictionary<string,DocumentData>)LoadProeprtyFromFile(fullPath, out succeed);
+            if (useStemming)
+                fullPath = _mainDictionaryFilePath + "\\" + LanguagesFileNameStemming;
+            else
+                fullPath = _mainDictionaryFilePath + "\\" + LanguagesFileNameWithoutStemming;
+            Status = "Loading languages";
+            DocLanguages = (ObservableCollection<string>)LoadProeprtyFromFile(fullPath, out succeed);
+            Status = "Merging main dictionary";
+            MergeSplittedDictionaries();
+            Status = "Done";
+            Progress = 1;
+            return succeed;
+        }
+
+        object LoadProeprtyFromFile(string fullPath,out bool succeed)
+        {
             var formatter = new BinaryFormatter();
-            DictionaryData dictionaryData;
+            object property;
             try
             {
                 using (var outputFile = new FileStream(fullPath, FileMode.Open))
                 //using (var compressionStream = new GZipStream(
                 //                         outputFile, CompressionMode.Decompress))
                 {
-                    dictionaryData = (DictionaryData)formatter.Deserialize(outputFile);
+                    property = formatter.Deserialize(outputFile);
                     outputFile.Flush();
+                    succeed = true;
+                    return property;
                 }
             }
-            catch
+            catch (Exception e)
             {
-                return false;
+                succeed = false;
+                return null;
             }
 
-            splittedMainDictionary = dictionaryData._splittedMainDictionary;
-            //MainDictionary = dictionaryData._mainDictionary;
-            Status = "Merging sub-dictionaries to main dictionary";
-            DocLanguages = dictionaryData._docLanguages;
-            _documnentsData = dictionaryData._docData;
-            MergeSplittedDictionaries();
-            InitDocumentsData();
-            Status = "Done";
-            Progress = 1;
-            return true;
         }
 
-        /// <summary>
-        /// Init Observable collection of documnets.
-        /// </summary>
-        private void InitDocumentsData()
-        {
-            DocumentsData = new ObservableCollection<DocumentData>(_documnentsData.Values.ToArray());
-        }
 
         public Searcher GetSearcher()
         {
-            return new Searcher(splittedMainDictionary, _documnentsData,_postingFilesAPI);
+            return new Searcher(splittedMainDictionary, DocumentsData,_postingFilesAPI);
         }
 
         [Serializable]
@@ -319,9 +355,24 @@ namespace SearchEngine
             {
                 _splittedMainDictionary = indexer.splittedMainDictionary;
                 _docLanguages = indexer.DocLanguages;
-                _docData = indexer._documnentsData;
+                _docData = indexer.DocumentsData;
             }
 
+        }
+
+        public Ranker GetRanker()
+        {
+            return new Ranker(DocumentsData,splittedMainDictionary);
+        }
+
+        public Dictionary<string, int> ParseQuery(string query,bool useStemming)
+        {
+            string[] splittedQuery = query.Split(' ');
+            int queryIndexer = 0;
+            Dictionary<string, int> termsFrequencyInQuery = new Dictionary<string, int>() ;
+            Parser.UseStemming = useStemming;
+            Parser.IterateTokens(ref queryIndexer, splittedQuery, termsFrequencyInQuery);
+            return termsFrequencyInQuery;
         }
     }
 }
