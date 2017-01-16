@@ -36,8 +36,42 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LAIR.Collections">
+      <HintPath>..\WordNet\TestApplication\bin\Debug\LAIR.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.MachineLearning">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.MachineLearning.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.Math">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.Math.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.Misc">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.Misc.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.Morphology">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.Morphology.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.ResourceAPIs.GraphViz">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.ResourceAPIs.GraphViz.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.ResourceAPIs.MySQL">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.ResourceAPIs.MySQL.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.ResourceAPIs.PostGIS">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.ResourceAPIs.PostGIS.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.ResourceAPIs.PostgreSQL">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.ResourceAPIs.PostgreSQL.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.ResourceAPIs.R">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.ResourceAPIs.R.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.XML">
+      <HintPath>..\WordNet\WordNet\bin\Debug\Public\LAIR.XML.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -51,7 +85,7 @@
     <Compile Include="Indexer.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="PostingFileRecord.cs" />
-    <Compile Include="PostingFilesAPI.cs" />
+    <Compile Include="PostingFilesManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ranking\Ranker.cs" />
     <Compile Include="Ranking\DocumentRank.cs" />
@@ -64,6 +98,12 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WordNet\WordNet\WordNet.csproj">
+      <Project>{f4c6c48c-90ef-445d-b8f8-ad9b6767d9a8}</Project>
+      <Name>WordNet</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

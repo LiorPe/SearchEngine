@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SearchEngine
 {
-    public class PostingFilesAPI
+    public class PostingFilesManager
     {
         public static int NumOfPostingFiles { get; set; }
         //Path for directory in which postinf files will be saved.
@@ -19,7 +19,7 @@ namespace SearchEngine
         Dictionary<int, int> _lastRowWrittenInFile;
         bool _useStemming;
 
-        public PostingFilesAPI(int numOfPostingFiles, string destPostingFiles,bool useStemming)
+        public PostingFilesManager(int numOfPostingFiles, string destPostingFiles,bool useStemming)
         {
             NumOfPostingFiles = numOfPostingFiles;
             _destPostingFiles = destPostingFiles;
@@ -45,18 +45,12 @@ namespace SearchEngine
             if (!Directory.Exists(_destPostingFiles))  // if it doesn't exist, create
                 Directory.CreateDirectory(_destPostingFiles);
             System.IO.DirectoryInfo di = new DirectoryInfo(_destPostingFiles);
-
-            foreach (FileInfo file in di.GetFiles())
-            {
-                if (!stemmingFiles.Contains(file.Name) && !noStemmingFiles.Contains(file.Name)) 
-                    file.Delete();
-            }
             string fullPostingFilesPath;
             for (int i = 0; i < NumOfPostingFiles; i++)
             {
                 // _destPostingFiles + "\\" + i + ".txt";
                 fullPostingFilesPath = GetFilePathName(i);
-                if (!File.Exists(fullPostingFilesPath))
+                if (File.Exists(fullPostingFilesPath))
                     File.Delete(fullPostingFilesPath);
             }
             for (int i = 0; i < NumOfPostingFiles; i++)

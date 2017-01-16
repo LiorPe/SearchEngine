@@ -14,9 +14,9 @@ namespace SearchEngine
         Dictionary<string, TermData>[] _splittedMainDictionary;
         private Dictionary<string, DocumentData> _documnentsData;
 
-        PostingFilesAPI _postingFilesAPI;
+        PostingFilesManager _postingFilesAPI;
 
-        public Searcher(Dictionary<string, TermData>[] splittedMainDictionary, Dictionary<string, DocumentData> documnentsData, PostingFilesAPI postingFilesAPI)
+        public Searcher(Dictionary<string, TermData>[] splittedMainDictionary, Dictionary<string, DocumentData> documnentsData, PostingFilesManager postingFilesAPI)
         {
             _splittedMainDictionary = splittedMainDictionary;
             _documnentsData = documnentsData;

@@ -40,7 +40,7 @@ namespace SearchEngine
         public ObservableCollection<string> DocLanguages;
         public Dictionary<string, DocumentData> DocumentsData = new Dictionary<string, DocumentData>();
 
-        PostingFilesAPI _postingFilesAPI;
+        PostingFilesManager _postingFilesAPI;
 
         // for showing progress:
         public event PropertyChangedEventHandler PropertyChanged;
@@ -87,7 +87,7 @@ namespace SearchEngine
         /// <param name="mode">Creat index/ load one</param>
         /// <param name="parserFactor">How many files to read to memory simultaneously</param>
         /// <param name="numOfPostiongFiles"> How many posting files are kept</param>
-        public Indexer(string mainDictionaryFilePath, Mode mode, PostingFilesAPI postingFilesAPI, int parserFactor = 10)
+        public Indexer(string mainDictionaryFilePath, Mode mode, PostingFilesManager postingFilesAPI, int parserFactor = 10)
         {
             ParserFactor = parserFactor;
             _mainDictionaryFilePath = mainDictionaryFilePath;
@@ -200,7 +200,7 @@ namespace SearchEngine
         // Create main dictionary which maps for every term its total frequencies, file name of posting file and ptr to row in file in which it`s stored.
         private void InitMainDictionary()
         {
-            int numOfPostingFiles = PostingFilesAPI.NumOfPostingFiles;
+            int numOfPostingFiles = PostingFilesManager.NumOfPostingFiles;
             splittedMainDictionary = new Dictionary<string, TermData>[numOfPostingFiles];
             for (int i = 0; i < numOfPostingFiles; i++)
             {
@@ -374,7 +374,7 @@ namespace SearchEngine
 
         public Ranker GetRanker()
         {
-            return new Ranker(DocumentsData,splittedMainDictionary);
+            return new Ranker(DocumentsData,splittedMainDictionary, _postingFilesAPI);
         }
 
         public Dictionary<string, int> ParseQuery(string[] query,bool useStemming)

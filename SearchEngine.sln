@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUI", "GUI\GUI.csproj", "{E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "ConsoleTest\ConsoleTest.csproj", "{1E0A931A-F579-4984-B868-D97CB78F9FDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordNet", "WordNet\WordNet\WordNet.csproj", "{F4C6C48C-90EF-445D-B8F8-AD9B6767D9A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +32,10 @@ Global
 		{1E0A931A-F579-4984-B868-D97CB78F9FDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E0A931A-F579-4984-B868-D97CB78F9FDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E0A931A-F579-4984-B868-D97CB78F9FDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4C6C48C-90EF-445D-B8F8-AD9B6767D9A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4C6C48C-90EF-445D-B8F8-AD9B6767D9A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4C6C48C-90EF-445D-B8F8-AD9B6767D9A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4C6C48C-90EF-445D-B8F8-AD9B6767D9A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

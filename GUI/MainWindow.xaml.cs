@@ -43,7 +43,7 @@ namespace GUI
         bool uploaded = false;
         Searcher searcher;
         Ranker ranker;
-        PostingFilesAPI _postingFilesAPI;
+        PostingFilesManager _postingFilesAPI;
         Dictionary<string, HashSet<string>> languages;
         ObservableCollection<LanguageSelection> languageSelected;
         DocumentRank[] rankedDocument;
@@ -179,7 +179,7 @@ namespace GUI
                 stemming = true;
             else
                 stemming = false;
-            _postingFilesAPI = new PostingFilesAPI(10, dest, stemming);
+            _postingFilesAPI = new PostingFilesManager(10, dest, stemming);
             idx = new Indexer(dest, Mode.Create, _postingFilesAPI);
             hasIndex = true;
             //run backgroundworker for the actual process
@@ -385,7 +385,7 @@ namespace GUI
                 stemming = true;
             else
                 stemming = false;
-            _postingFilesAPI = new PostingFilesAPI(10, dest,stemming);
+            _postingFilesAPI = new PostingFilesManager(10, dest,stemming);
             idx = new Indexer(dest, Mode.Load, _postingFilesAPI);
             hasIndex = true;
             //call backgroundworker for the actual loading process
@@ -694,8 +694,9 @@ namespace GUI
                 stopwords = src + "stop_words.txt";
             else stopwords = src + "\\stop_words.txt";
             Parser.InitStopWords(stopwords);
-            for (double w=1; w<=1; w += 0.5)
+            for (double w=1; w<=2; w += 0.2)
             {
+                ranker.w2 = w;
                 w1 = w;
                 rankedDocument = new DocumentRank[0];
                 SearchFileQuery();
