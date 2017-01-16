@@ -697,7 +697,6 @@ namespace GUI
             for (double w=1; w<=2; w += 0.2)
             {
                 ranker.w2 = w;
-                w1 = w;
                 rankedDocument = new DocumentRank[0];
                 SearchFileQuery();
                 int resultsCount = rankedDocument.Length;

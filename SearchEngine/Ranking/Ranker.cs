@@ -29,7 +29,7 @@ namespace SearchEngine.Ranking
             _documents = documents;
             _splittedMainDictionary = splittedMainDictionary;
             string root = Path.GetDirectoryName(Application.ExecutablePath);
-            _similarityEngine = new WordNetEngine(@"\WNdb-3.0", true);
+            _similarityEngine = new WordNetEngine(@"WNdb-3.0", true);
             _postingFilesManager = postingFilesManager;
 
         }
