@@ -77,7 +77,7 @@ namespace SearchEngine
                     }
             }
         }
-
+        bool _useStemming;
         #region Inits
         /// <summary>
         /// C`tor
@@ -241,6 +241,7 @@ namespace SearchEngine
         /// <param name="useStemming"></param>
         public void SaveMainDictionaryToMemory(bool useStemming)
         {
+            _useStemming = useStemming;
             string fullPath;
             if (useStemming)
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameStemming;
@@ -294,6 +295,7 @@ namespace SearchEngine
         /// <returns></returns>
         public bool LoadMainDictionaryFromMemory(bool useStemming)
         {
+            _useStemming = useStemming;
             string fullPath;
             bool succeed;
             if (useStemming)
@@ -374,7 +376,7 @@ namespace SearchEngine
 
         public Ranker GetRanker()
         {
-            return new Ranker(DocumentsData,splittedMainDictionary, _postingFilesAPI);
+            return new Ranker(DocumentsData,splittedMainDictionary, GetSearcher(),_useStemming);
         }
 
         public Dictionary<string, int> ParseQuery(string[] query,bool useStemming)

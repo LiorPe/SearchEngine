@@ -47,10 +47,10 @@
                 <CheckBox x:Name="stemCheck" Grid.Column="1" Grid.Row="5" IsChecked="True" VerticalAlignment="Center" MinWidth="80" Margin="0,6" FontSize="18">Enable Stemming (Porter's algorithm)</CheckBox>
                 <Label Grid.Column="1" Grid.Row="3" FontSize="18">Enter destination path:</Label>
                 <TextBox x:Name="destPath" Grid.Column="1" Grid.Row="4" FontSize="18"></TextBox>
-                <Button x:Name="src_browse_button" Content="Browse" Grid.Row="4" Grid.Column="2"   Click="src_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
+                <Button x:Name="src_browse_button" Content="Browse" Grid.Row="2" Grid.Column="2"   Click="src_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
                 <Label Grid.Column="1" Grid.Row="1" FontSize="18">Enter source path:</Label>
                 <TextBox x:Name="srcPath" Grid.Column="1" Grid.Row="2" FontSize="18"></TextBox>
-                <Button x:Name="dst_browse_button" Content="Browse" Grid.Row="2" Grid.Column="2" Click="dst_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
+                <Button x:Name="dst_browse_button" Content="Browse" Grid.Row="4" Grid.Column="2" Click="dst_browse_button_Click" Margin="2,2,2,2" FontSize="18"/>
             </Grid>
         </TabItem>
         <TabItem Header="Part B - Submitting Qurries"  FontSize="20">
