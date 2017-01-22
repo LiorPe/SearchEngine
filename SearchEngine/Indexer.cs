@@ -14,7 +14,7 @@ using SearchEngine.Ranking;
 
 namespace SearchEngine
 {
-    public enum Mode { Create ,Load };
+    public enum Mode { Create, Load };
     public class Indexer : INotifyPropertyChanged
     {
         // Main dictionarry of terms - saves amountt of total frequencies in all docs, name of file (posting file) in which term is saved, and
@@ -32,10 +32,10 @@ namespace SearchEngine
         public const string DocumentsDataFileNameWithoutStemming = "DocumentsDataWithoutStemming";
         public const string LanguagesFileNameStemming = "LanguagesStemming";
         public const string LanguagesFileNameWithoutStemming = "LanguagesWithoutStemming";
-        public static HashSet<string> StemmingFiles = new HashSet<string>{ MainDictionaryFileNameStemming, DocumentsDataFileNameStemming, LanguagesFileNameStemming };
-        public static HashSet<string> NoStemmingFiles=new HashSet<string> { MainDictionaryFileNameWithoutStemming, DocumentsDataFileNameWithoutStemming, LanguagesFileNameWithoutStemming };
+        public static HashSet<string> StemmingFiles = new HashSet<string> { MainDictionaryFileNameStemming, DocumentsDataFileNameStemming, LanguagesFileNameStemming };
+        public static HashSet<string> NoStemmingFiles = new HashSet<string> { MainDictionaryFileNameWithoutStemming, DocumentsDataFileNameWithoutStemming, LanguagesFileNameWithoutStemming };
         public double AvgDocumentLength { get; set; }
-    
+
 
         public ObservableCollection<string> DocLanguages;
         public Dictionary<string, DocumentData> DocumentsData = new Dictionary<string, DocumentData>();
@@ -44,13 +44,13 @@ namespace SearchEngine
 
         // for showing progress:
         public event PropertyChangedEventHandler PropertyChanged;
-        
+
         public void NotifyPropertyChanged(string propName)
         {
             if (this.PropertyChanged != null)
                 this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
         }
-        
+
         //progress statues between 0-1 
         double _progress = 0;
         public double Progress
@@ -70,11 +70,13 @@ namespace SearchEngine
         public string Status
         {
             get { return _status; }
-            set { if(_status != value)
-                    {
-                        _status = value;
-                        NotifyPropertyChanged("Status");
-                    }
+            set
+            {
+                if (_status != value)
+                {
+                    _status = value;
+                    NotifyPropertyChanged("Status");
+                }
             }
         }
         bool _useStemming;
@@ -96,7 +98,7 @@ namespace SearchEngine
             if (mode == Mode.Create)
             {
                 InitMainDictionary();
-                _postingFilesAPI.InitPostingFiles(StemmingFiles,NoStemmingFiles);
+                _postingFilesAPI.InitPostingFiles(StemmingFiles, NoStemmingFiles);
             }
 
 
@@ -110,7 +112,7 @@ namespace SearchEngine
         public void IndexCorpus(string corpusDirectoryPath, string stopWordsFilePath, bool useStemming)
         {
             // Extract all files in source directory, excluding stopwords file.
-            HashSet<string> allFileEntries = new HashSet<string>( Directory.GetFiles(corpusDirectoryPath));
+            HashSet<string> allFileEntries = new HashSet<string>(Directory.GetFiles(corpusDirectoryPath));
             if (allFileEntries.Contains(stopWordsFilePath))
             {
                 allFileEntries.Remove(stopWordsFilePath);
@@ -146,7 +148,7 @@ namespace SearchEngine
             for (int i = 0; i < size; i++)
             {
                 // Update status message for GUI
-                string filesBeingProccessed =String.Empty;
+                string filesBeingProccessed = String.Empty;
                 foreach (string fileName in docFilesNames[i])
                 {
                     filesBeingProccessed += String.Format("{0};", Path.GetFileName(fileName));
@@ -157,11 +159,11 @@ namespace SearchEngine
                 Parser.Parse(docFilesNames[i], useStemming, out termsFrequencies, DocumentsData);
                 Status = String.Format("Indexing files: {0}", filesBeingProccessed);
                 // Index returned terms
-                _postingFilesAPI.UpdateTermsInPostingFiles(termsFrequencies,splittedMainDictionary);
-                Progress = (double)(i+1) / (double)(size+1);
+                _postingFilesAPI.UpdateTermsInPostingFiles(termsFrequencies, splittedMainDictionary);
+                Progress = (double)(i + 1) / (double)(size + 1);
                 //Console.WriteLine("{0} , {1}", status, progress);
             }
-            Status = "Merging main dictionary"; 
+            Status = "Merging main dictionary";
             MergeSplittedDictionaries();
             Status = "Finding all languages exist in courpus";
             ExtractLanguages();
@@ -170,7 +172,7 @@ namespace SearchEngine
             SaveMainDictionaryToMemory(useStemming);
             CalculateAverageDocumenbtLength();
             Progress = 1;
-            
+
         }
 
         private void CalculateAverageDocumenbtLength()
@@ -190,7 +192,7 @@ namespace SearchEngine
             foreach (DocumentData docData in DocumentsData.Values)
             {
                 string language = docData.Language;
-                if (language!=String.Empty && !languages.Contains(language))
+                if (language != String.Empty && !languages.Contains(language))
                     languages.Add(language);
             }
             DocLanguages = new ObservableCollection<string>(languages);
@@ -209,7 +211,7 @@ namespace SearchEngine
         }
         #endregion
 
-       
+
 
         /// <summary>
         /// Merge sub-dictionaries to one sorted dictionary
@@ -265,7 +267,7 @@ namespace SearchEngine
 
         }
 
-        public void SavePropertyToFile(object obj,string fullPath)
+        public void SavePropertyToFile(object obj, string fullPath)
         {
             var formatter = new BinaryFormatter();
 
@@ -304,13 +306,13 @@ namespace SearchEngine
                 fullPath = _mainDictionaryFilePath + "\\" + MainDictionaryFileNameWithoutStemming;
             Status = "Loading main dictionary";
 
-            splittedMainDictionary =  (Dictionary<string,TermData>[]) LoadProeprtyFromFile(fullPath, out succeed);
+            splittedMainDictionary = (Dictionary<string, TermData>[])LoadProeprtyFromFile(fullPath, out succeed);
             if (useStemming)
                 fullPath = _mainDictionaryFilePath + "\\" + DocumentsDataFileNameStemming;
             else
                 fullPath = _mainDictionaryFilePath + "\\" + DocumentsDataFileNameWithoutStemming;
             Status = "Loading document data";
-            DocumentsData = (Dictionary<string,DocumentData>)LoadProeprtyFromFile(fullPath, out succeed);
+            DocumentsData = (Dictionary<string, DocumentData>)LoadProeprtyFromFile(fullPath, out succeed);
             if (useStemming)
                 fullPath = _mainDictionaryFilePath + "\\" + LanguagesFileNameStemming;
             else
@@ -325,7 +327,7 @@ namespace SearchEngine
             return succeed;
         }
 
-        object LoadProeprtyFromFile(string fullPath,out bool succeed)
+        object LoadProeprtyFromFile(string fullPath, out bool succeed)
         {
             var formatter = new BinaryFormatter();
             object property;
@@ -352,7 +354,7 @@ namespace SearchEngine
 
         public Searcher GetSearcher()
         {
-            return new Searcher(splittedMainDictionary, DocumentsData,_postingFilesAPI);
+            return new Searcher(splittedMainDictionary, DocumentsData, _postingFilesAPI);
         }
 
         [Serializable]
@@ -362,7 +364,7 @@ namespace SearchEngine
             // ptr to file (row number in which term is stored)
             internal Dictionary<string, TermData>[] _splittedMainDictionary;
             internal ObservableCollection<string> _docLanguages;
-            internal  Dictionary<string, DocumentData> _docData;
+            internal Dictionary<string, DocumentData> _docData;
 
 
             public DictionaryData(Indexer indexer)
@@ -376,15 +378,15 @@ namespace SearchEngine
 
         public Ranker GetRanker()
         {
-            return new Ranker(DocumentsData,splittedMainDictionary, GetSearcher(),_useStemming);
+            return new Ranker(DocumentsData, splittedMainDictionary, GetSearcher(), _useStemming);
         }
 
-        public Dictionary<string, int> ParseQuery(string[] query,bool useStemming)
+        public Dictionary<string, int> ParseQuery(string[] query, bool useStemming)
         {
             int queryIndexer = 0;
-            Dictionary<string, int> termsFrequencyInQuery = new Dictionary<string, int>() ;
+            Dictionary<string, int> termsFrequencyInQuery = new Dictionary<string, int>();
             Parser.UseStemming = useStemming;
-            Parser.IterateTokens(ref queryIndexer, query, termsFrequencyInQuery,false);
+            Parser.IterateTokens(ref queryIndexer, query, termsFrequencyInQuery, false);
             return termsFrequencyInQuery;
         }
     }

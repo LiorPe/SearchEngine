@@ -90,16 +90,21 @@ namespace SearchEngine
         internal static PostingFileRecord DeseralizePostingFileRecord(string postingFileEntry, bool searchAutoComplete)
         {
             PostingFileRecord postingRecord = new PostingFileRecord();
+            postingRecord.NextTermFrequencies = new Dictionary<string, Dictionary<string, int>>();
+            postingRecord.NextTermInAllDocuments = new Dictionary<string, int>();
+            Dictionary<string, Dictionary<string, int>> nextTermFrequencies = postingRecord.NextTermFrequencies;
             string[] termDataSplittedByDocuments = postingFileEntry.Split(InterRecerodDelimiter);
             foreach (string termDataInOneDocument in termDataSplittedByDocuments)
             {
                 string[] attributes = termDataInOneDocument.Split(IntraRecerodDelimiter);
-                postingRecord.DF[attributes[0]] = Int32.Parse(attributes[1]);
-                Dictionary<string, int> nextTermFrequencies = postingRecord.NextTermFrequencies;
+                string docName = attributes[0];
+                int DF = Int32.Parse(attributes[1]);
+                postingRecord.DF[docName] = DF;
+                nextTermFrequencies[docName] = new Dictionary<string, int>();
+                Dictionary<string, int> currentDoucmentNextTokens = nextTermFrequencies[docName];
+
                 string nextTerm;
                 int frequency;
-                if (!searchAutoComplete)
-                    continue;
                 int i = 2;
                 while (i + 1 < attributes.Length)
                 {
@@ -108,9 +113,16 @@ namespace SearchEngine
                     {
                         frequency = Int32.Parse(attributes[i + 1]);
                         if (nextTermFrequencies.ContainsKey(nextTerm))
-                            nextTermFrequencies[nextTerm] += frequency;
+                            currentDoucmentNextTokens[nextTerm] += frequency;
                         else
-                            nextTermFrequencies[nextTerm] = frequency;
+                            currentDoucmentNextTokens[nextTerm] = frequency;
+                        if (searchAutoComplete)
+                        {
+                            if (postingRecord.NextTermInAllDocuments.ContainsKey(nextTerm))
+                                postingRecord.NextTermInAllDocuments[nextTerm] += frequency;
+                            else
+                                postingRecord.NextTermInAllDocuments[nextTerm] = frequency;
+                        }
                         i += 2;
                     }
                     else
@@ -119,21 +131,20 @@ namespace SearchEngine
 
 
             }
+        
             if (searchAutoComplete)
-            {
-                var sortedNextTermsByFrequency = postingRecord.NextTermFrequencies.ToList();
+           {
+                var sortedNextTermsByFrequency = postingRecord.NextTermInAllDocuments.ToList();
 
                 sortedNextTermsByFrequency.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
-                postingRecord.NextTermFrequencies = new Dictionary<string, int>();
+                postingRecord.NextTermInAllDocuments = new Dictionary<string, int>();
                 int numOfSuggestion = Math.Min(5, sortedNextTermsByFrequency.Count);
                 for (int i = 0; i < numOfSuggestion; i++)
                 {
                     KeyValuePair<string, int> nextTermFrequency = sortedNextTermsByFrequency[i];
-                    postingRecord.NextTermFrequencies[nextTermFrequency.Key] = nextTermFrequency.Value;
+                    postingRecord.NextTermInAllDocuments[nextTermFrequency.Key] = nextTermFrequency.Value;
                 }
             }
-
-
             return postingRecord;
         }
     }

@@ -30,7 +30,7 @@ namespace SearchEngine
             Dictionary<string, PostingFileRecord> postingFileRecord = _postingFilesAPI.ExtractPostingFileRecords(new string[] { userQuery }, _splittedMainDictionary, true);
             List<string> completionSuggestions = new List<string>();
             if (postingFileRecord.ContainsKey(userQuery))
-                completionSuggestions = postingFileRecord[userQuery].NextTermFrequencies.Keys.ToList();
+                completionSuggestions = postingFileRecord[userQuery].NextTermInAllDocuments.Keys.ToList();
             return completionSuggestions;
 
         }

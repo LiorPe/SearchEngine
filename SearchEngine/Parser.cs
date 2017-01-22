@@ -79,6 +79,7 @@ namespace SearchEngine
         /// <param name="documentsData"> The documents found in files</param>
         public static void Parse(string[] filePathes, bool useStemming, out TermFrequency[] termsToIndex,  Dictionary<string, DocumentData> documentsData)
         {
+            UseStemming = useStemming;
             Dictionary<string, TermFrequency> termsFoundInFiles = new Dictionary<string, TermFrequency>();
             int numOfFiles = filePathes.Length;
             // for each file given to parser:

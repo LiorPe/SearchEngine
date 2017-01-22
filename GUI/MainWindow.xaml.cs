@@ -47,9 +47,9 @@ namespace GUI
         Dictionary<string, HashSet<string>> languages;
         ObservableCollection<LanguageSelection> languageSelected;
         DocumentRank[] rankedDocument;
-        static char[] QuerrySplitters = new char[] { ' ', '\t' };
+        static char[] QuerrySplitters = new char[] { ' ', '\t', '\r' };
         bool searchDone = false;
-        
+
 
         /// <summary>
         /// Ctor for the MainWindow
@@ -327,7 +327,7 @@ namespace GUI
         /// </summary>
         private void Delete_Files()
         {
-            if(dest != "")
+            if (dest != "")
             {
                 string target;
                 if (dest[dest.Length - 1] == '\\')
@@ -623,9 +623,12 @@ namespace GUI
         private void SearchQuery(string[] query, string queryID)
         {
             Dictionary<string, int> termsInQuery = idx.ParseQuery(query, stemming);
+            Dictionary<string, double> termsInQueryToDouble = new Dictionary<string, double>();
+            foreach (string term in termsInQuery.Keys)
+                termsInQueryToDouble[term] = termsInQuery[term];
             Dictionary<string, PostingFileRecord> releventDocuments = searcher.FindReleventDocuments(termsInQuery);
             HashSet<string> chosenLanguages = ExtractChosenLanguages();
-            rankedDocument = ranker.RankDocuments(termsInQuery, queryID, releventDocuments, rankedDocument, idx.AvgDocumentLength, chosenLanguages);
+            rankedDocument = ranker.RankDocuments(termsInQueryToDouble, queryID, releventDocuments, rankedDocument, idx.AvgDocumentLength, chosenLanguages);
         }
 
         private HashSet<string> ExtractChosenLanguages()
@@ -671,21 +674,6 @@ namespace GUI
 
         private void Test_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                Test();
-            }
-            catch
-            {
-                // Test_Click(sender, e);
-                Test();
-
-            }
-        }
-
-        void Test()
-        {
-
             if (String.IsNullOrWhiteSpace(txtbxUserQuery.Text) && String.IsNullOrWhiteSpace(txtbxFileQuery.Text))
             {
                 System.Windows.MessageBox.Show("Please submit or upload a query");
@@ -712,48 +700,68 @@ namespace GUI
                 stopwords = src + "stop_words.txt";
             else stopwords = src + "\\stop_words.txt";
             Parser.InitStopWords(stopwords);
-            for (double w1 = 2; w1 <= 2; w1 += 0.2)
-            {
-                for (double w2 = 0; w2 <= 2; w2 += 0.2)
-                {
-                    ranker.w1 = w1;
-                    ranker.w2 = w2;
-                    rankedDocument = new DocumentRank[0];
-                    SearchFileQuery();
-                    int resultsCount = rankedDocument.Length;
-                    string[] queriesRecords = new string[resultsCount];
-                    for (int i = 0; i < resultsCount; i++)
-                    {
-                        queriesRecords[i] = rankedDocument[i].ToString();
-                    }
-                    string fileName = String.Format("results_w1_{0}_w2_{1}.txt", w1,w2);
-                    string filePath = String.Format(@"C:\IR\{0}", fileName);
-                    File.WriteAllLines(filePath, queriesRecords);
 
 
-                    Process p = new Process();
-                    ProcessStartInfo info = new ProcessStartInfo();
-                    info.FileName = "cmd.exe";
-                    info.RedirectStandardInput = true;
-                    info.UseShellExecute = false;
 
-                    p.StartInfo = info;
-                    p.Start();
 
-                    using (StreamWriter sw = p.StandardInput)
-                    {
-                        if (sw.BaseStream.CanWrite)
-                        {
-                            sw.WriteLine(@"cd C:\IR");
-                            sw.WriteLine(String.Format("treceval qrels.txt {0} > output_{0}", fileName));
-                        }
-                    }
+            Test(1.8, 0.5, 0.2, 0.65, 1.1);// best
 
-                }
 
-            }
+
+
+
+
+
+
             System.Windows.MessageBox.Show("Test is done");
             return;
+        }
+
+
+        public void Test(params double[] parameters)
+        {
+            ranker.w1 = parameters[0];
+            ranker.w2 = parameters[1];
+            ranker.w3 = parameters[2];
+            ranker.w4 = parameters[3];
+
+            ranker.wSemantics = parameters[4];
+
+            //for (double w2 = 0; w2 <= 0; w2 += 0)
+            //{
+
+
+            //ranker.w2 = w2;
+            rankedDocument = new DocumentRank[0];
+            SearchFileQuery();
+            int resultsCount = rankedDocument.Length;
+            string[] queriesRecords = new string[resultsCount];
+            for (int i = 0; i < resultsCount; i++)
+            {
+                queriesRecords[i] = rankedDocument[i].ToString();
+            }
+            string fileName = String.Format("results_w1_{0}_w2_{1}_w3_{2}_w4_{3}_wSemantics_{4}.txt", ranker.w1, ranker.w2, ranker.w3 , ranker.w4, ranker.wSemantics);
+            string filePath = String.Format(@"C:\IR\{0}", fileName);
+            File.WriteAllLines(filePath, queriesRecords);
+
+
+            Process p = new Process();
+            ProcessStartInfo info = new ProcessStartInfo();
+            info.FileName = "cmd.exe";
+            info.RedirectStandardInput = true;
+            info.UseShellExecute = false;
+
+            p.StartInfo = info;
+            p.Start();
+
+            using (StreamWriter sw = p.StandardInput)
+            {
+                if (sw.BaseStream.CanWrite)
+                {
+                    sw.WriteLine(@"cd C:\IR");
+                    sw.WriteLine(String.Format("treceval qrels.txt {0} > output_{0}", fileName));
+                }
+            }
         }
     }
 

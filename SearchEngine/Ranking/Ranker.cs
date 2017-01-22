@@ -13,11 +13,18 @@ namespace SearchEngine.Ranking
 {
     public class Ranker
     {
-        public double k1 = 1.2;
+        public double k1 = 1.6;
         public double k2 = 100;
-        public double b = 0.75;
-        public double w1 = 2;
-        public double w2 = 0.8;
+        public double b = 0.25;
+
+
+        public double w1 = 1.8;
+        public double w2 = 0.5;
+        public double w3 = 0.2;
+        public double w4 = 0.65;
+        public double wSemantics = 1.1;
+
+
         Dictionary<string, DocumentData> _documents;
         Dictionary<string, TermData>[] _splittedMainDictionary;
         int resultsToRetrieve = 50;
@@ -25,6 +32,8 @@ namespace SearchEngine.Ranking
         Searcher _searcher;
         Stemmer _stemmer;
         bool _useStemming;
+        static Dictionary<string, PostingFileRecord> _postingFileRecordsInMemory;
+
         public Ranker(Dictionary<string, DocumentData> documents, Dictionary<string, TermData>[] splittedMainDictionary, Searcher searcher, bool useStemming)
         {
             _documents = documents;
@@ -34,9 +43,11 @@ namespace SearchEngine.Ranking
             _searcher = searcher;
             _stemmer = new Stemmer();
             _useStemming = useStemming;
+            if (_postingFileRecordsInMemory == null)
+                _postingFileRecordsInMemory = new Dictionary<string, PostingFileRecord>();
         }
 
-        public DocumentRank[] RankDocuments(Dictionary<string, int> termsInQuery, string queryID, Dictionary<string, PostingFileRecord> releventPostingFilesRecords,
+        public DocumentRank[] RankDocuments(Dictionary<string, double> termsInQuery, string queryID, Dictionary<string, PostingFileRecord> releventPostingFilesRecords,
             DocumentRank[] previousRankedDocuments, double avgDocumentLength, HashSet<string> chosenLanguages)
         {
             bool considerLanguages = chosenLanguages.Count > 0;
@@ -54,60 +65,15 @@ namespace SearchEngine.Ranking
             {
                 documentRanking[docNum] = BM25(termsInQuery, docNum, releventPostingFilesRecords, R, avgDocumentLength, N);
                 documentRanking[docNum] += w1 * TitleRank(termsInQuery, docNum);
+                documentRanking[docNum] += w3 * AddAdjacentTermsScore(termsInQuery, docNum, releventPostingFilesRecords);
+                documentRanking[docNum] += w4 * SpecificityOfDocument(termsInQuery, docNum, releventPostingFilesRecords);
 
             }
-            string synToAdd;
-            Dictionary<string, PostingFileRecord> releventPostingFilesRecordsWithSemanitc;
-            Dictionary<string, double> documentRankingWithSemantics = new Dictionary<string, double>();
-            HashSet<string> syns = new HashSet<string>();
-            Dictionary<string, int> queryCominedWithSynonyms = new Dictionary<string, int>();
-            foreach (string term in termsInQuery.Keys)
-            {
-                queryCominedWithSynonyms[term] = termsInQuery[term];
-                Set<SynSet> synsets = _similarityEngine.GetSynSets(term, null);
-                foreach (SynSet syn in synsets)
-                {
-                    foreach (string synonym in syn.Words)
-                    {
-                        if (_useStemming)
-                            synToAdd = _stemmer.stemTerm(synonym);
-                        else
-                            synToAdd = synonym;
-                        syns.Add(synToAdd);
-                        if (queryCominedWithSynonyms.ContainsKey(synToAdd))
-                            queryCominedWithSynonyms[synToAdd] += termsInQuery[term];
-                        else
-                            queryCominedWithSynonyms[synToAdd] = termsInQuery[term];
-                    }
-
-                }
-
-            }
-            releventPostingFilesRecordsWithSemanitc = _searcher.FindReleventDocuments(queryCominedWithSynonyms);
-            HashSet<string> releventDocumentsWithSemantic = GetReleventDocument(releventPostingFilesRecordsWithSemanitc, false, chosenLanguages);
-            foreach (string docNum in releventDocumentsWithSemantic)
-            {
-                if (!documentRankingWithSemantics.ContainsKey(docNum))
-                    documentRankingWithSemantics[docNum] = 0;
-                documentRankingWithSemantics[docNum] += BM25(queryCominedWithSynonyms, docNum, releventPostingFilesRecordsWithSemanitc, R, avgDocumentLength, N,syns);
-                documentRankingWithSemantics[docNum] += w1 * TitleRank(queryCominedWithSynonyms, docNum);
-
-            }
-
-            for (int i = 0; i < documentRankingWithSemantics.Count; i++)
-            {
-                string docNum = documentRankingWithSemantics.Keys.ElementAt(i);
-                documentRankingWithSemantics[docNum] = documentRankingWithSemantics[docNum] / termsInQuery.Count;
-                if (!documentRanking.ContainsKey(docNum))
-                    documentRanking[docNum] = 0;
-                documentRanking[docNum] += w2 * documentRankingWithSemantics[docNum];
-            }
-
-
+            UpdateRankWithSemantics(termsInQuery, ref documentRanking, chosenLanguages, R, avgDocumentLength, N);
+            int rankIndexer = 0;
             var sortedRank = documentRanking.OrderByDescending(i => i.Value);
             int numOfResults = Math.Min(resultsToRetrieve, sortedRank.Count());
             List<DocumentRank> sortedRankedDocuments = new List<DocumentRank>();
-            int rankIndexer = 0;
             for (int i = 0; i < previousRankedDocuments.Length; i++, rankIndexer++)
             {
                 sortedRankedDocuments.Add(previousRankedDocuments[i]);
@@ -120,9 +86,154 @@ namespace SearchEngine.Ranking
                 else
                     break;
             }
-
             return sortedRankedDocuments.ToArray();
+
         }
+
+        private double SpecificityOfDocument(Dictionary<string, double> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords)
+        {
+            double termsAppearInDoc = 0;
+            foreach (string term in termsInQuery.Keys)
+            {
+                PostingFileRecord postingFileOfTerm = releventPostingFilesRecords[term];
+                if (!postingFileOfTerm.DF.ContainsKey(docNum))
+                    continue;
+                else
+                    termsAppearInDoc++;
+            }
+            return (double)_documents[docNum].AmmountOfUniqueTerms / _documents[docNum].DocumentLength * termsAppearInDoc / termsInQuery.Count;
+
+        }
+
+        private double AddAdjacentTermsScore(Dictionary<string, double> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords)
+        {
+            double score = 0;
+            foreach (string term in termsInQuery.Keys)
+            {
+                double termScore = 0;
+                if (!releventPostingFilesRecords.ContainsKey(term))
+                    continue;
+                PostingFileRecord postingFileOfTerm = releventPostingFilesRecords[term];
+                if (!postingFileOfTerm.NextTermFrequencies.ContainsKey(docNum))
+                    continue;
+                Dictionary<string, int> nextTermsInDocument = postingFileOfTerm.NextTermFrequencies[docNum];
+                foreach (string nextTerm in termsInQuery.Keys)
+                {
+                    if (nextTerm != term && nextTermsInDocument.ContainsKey(nextTerm))
+                        termScore += nextTermsInDocument[nextTerm];
+
+                }
+                score += termScore / postingFileOfTerm.DF[docNum];
+
+            }
+            return score;
+        }
+
+        private void UpdateRankWithSemantics(Dictionary<string, double> termsInQuery, ref Dictionary<string, double> documentRanking, HashSet<string> chosenLanguages, double R, double avgDocumentLength, double N)
+        {
+            Dictionary<string, double> queryWithSemantics = GetQueryCombindedWithSemantics(termsInQuery);
+            Dictionary<string, double> documentRankingForExpandedQuery = new Dictionary<string, double>();
+            Dictionary<string, PostingFileRecord> releventPostingFilesRecordsExpandedQuery = new Dictionary<string, PostingFileRecord>();
+            Dictionary<string, int> termsToRetreiveFromMemory = new Dictionary<string, int>();
+            foreach (string term in queryWithSemantics.Keys)
+            {
+                if (_postingFileRecordsInMemory.ContainsKey(term))
+                    releventPostingFilesRecordsExpandedQuery[term] = _postingFileRecordsInMemory[term];
+                else
+                    termsToRetreiveFromMemory[term] = 0;
+            }
+            Dictionary<string, PostingFileRecord> retreivedPostinfFilesRecord = _searcher.FindReleventDocuments(termsToRetreiveFromMemory);
+            foreach (string retreivedTerm in retreivedPostinfFilesRecord.Keys)
+            {
+                _postingFileRecordsInMemory[retreivedTerm] = retreivedPostinfFilesRecord[retreivedTerm];
+                releventPostingFilesRecordsExpandedQuery[retreivedTerm] = retreivedPostinfFilesRecord[retreivedTerm];
+            }
+            List<string> termsToRemove = new List<string>();
+            foreach (string term in queryWithSemantics.Keys)
+            {
+                if (!releventPostingFilesRecordsExpandedQuery.ContainsKey(term))
+                    termsToRemove.Add(term);
+            }
+            foreach (string term in termsToRemove)
+                queryWithSemantics.Remove(term);
+
+            HashSet<string> releventDocumentsForExpandedQuery = GetReleventDocument(releventPostingFilesRecordsExpandedQuery, false, chosenLanguages);
+            foreach (string docNum in releventDocumentsForExpandedQuery)
+            {
+                if (!documentRankingForExpandedQuery.ContainsKey(docNum))
+                    documentRankingForExpandedQuery[docNum] = 0;
+                documentRankingForExpandedQuery[docNum] += BM25(queryWithSemantics, docNum, releventPostingFilesRecordsExpandedQuery, R, avgDocumentLength, N);
+                documentRankingForExpandedQuery[docNum] += w1 * TitleRank(queryWithSemantics, docNum);
+                documentRankingForExpandedQuery[docNum] += w3 * AddAdjacentTermsScore(queryWithSemantics, docNum, releventPostingFilesRecordsExpandedQuery);
+                documentRankingForExpandedQuery[docNum] += w4 * SpecificityOfDocument(queryWithSemantics, docNum, releventPostingFilesRecordsExpandedQuery);
+            }
+            foreach (string docNum in documentRankingForExpandedQuery.Keys)
+            {
+                if (!documentRanking.ContainsKey(docNum))
+                    documentRanking[docNum] = w2 * documentRankingForExpandedQuery[docNum];
+                documentRanking[docNum] += w2 * documentRankingForExpandedQuery[docNum];
+            }
+
+        }
+
+        private Dictionary<string, double> GetQueryCombindedWithSemantics(Dictionary<string, double> termsInQuery)
+        {
+            string termToAdd;
+            Dictionary<string, double> queryCombindedWithSemantics = new Dictionary<string, double>();
+            foreach (string term in termsInQuery.Keys)
+            {
+                queryCombindedWithSemantics[term] = termsInQuery[term];
+                Set<SynSet> termSynSets = _similarityEngine.GetSynSets(term, null);
+                foreach (SynSet synSet in termSynSets)
+                {
+                    foreach (string syn in synSet.Words)
+                    {
+
+                        if (syn.Contains("_"))
+                        {
+                            string[] splittedTerm = syn.Split('_');
+                            foreach (string subTerm in splittedTerm)
+                            {
+                                if (_useStemming)
+                                    termToAdd = _stemmer.stemTerm(subTerm);
+                                else
+                                    termToAdd = subTerm;
+                                if (!Parser.StopWords.Contains(termToAdd) && !termsInQuery.ContainsKey(termToAdd))
+                                {
+                                    queryCombindedWithSemantics[termToAdd] = termsInQuery[term] / wSemantics;
+                                }
+                            }
+                            queryCombindedWithSemantics[syn.Replace('_', '-')] = termsInQuery[term] / wSemantics;
+                        }
+
+                        else
+                        {
+                            if (_useStemming)
+                                termToAdd = _stemmer.stemTerm(syn);
+                            else
+                                termToAdd = syn;
+                            if (!termsInQuery.ContainsKey(termToAdd))
+                            {
+
+                                queryCombindedWithSemantics[termToAdd] = termsInQuery[term] / wSemantics;
+                            }
+                        }
+
+                    }
+                }
+
+            }
+            return queryCombindedWithSemantics;
+        }
+
+        private List<string> CopySynsFromSynset(SynSet synSet)
+        {
+            List<string> allSynsInSynset = new List<string>();
+            foreach (string syn in synSet.Words)
+                allSynsInSynset.Add(syn);
+            return allSynsInSynset;
+        }
+
 
         private HashSet<string> GetReleventDocument(Dictionary<string, PostingFileRecord> releventPostingFilesRecords, bool considerLanguages, HashSet<string> chosenLanguages)
         {
@@ -139,7 +250,7 @@ namespace SearchEngine.Ranking
         }
 
 
-        private double BM25(Dictionary<string, int> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords, double R, double avgDocumentLength, double N, HashSet<string> syns = null)
+        private double BM25(Dictionary<string, double> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords, double R, double avgDocumentLength, double N)
         {
             double documentLength = _documents[docNum].DocumentLength;
             double docRank = 0;
@@ -159,11 +270,9 @@ namespace SearchEngine.Ranking
                     f = 0;
                 double r = 0;
                 double qf = termsInQuery[termInQuery];
-                if (syns!=null && syns.Contains(termInQuery))
-                    qf = qf / 1.5;
 
 
-                    double K = k1 * ((1 - b) + b * documentLength / avgDocumentLength);
+                double K = k1 * ((1 - b) + b * documentLength / avgDocumentLength);
 
                 double termContributionToRank;
                 termContributionToRank = Math.Log(((r + 0.5) / (R - r + 0.5)) / ((n - r + 0.5) / (N - n - R + r + 0.5)));
@@ -171,9 +280,9 @@ namespace SearchEngine.Ranking
                 termContributionToRank = termContributionToRank * (k2 + 1) * qf / (k2 + qf);
                 docRank += Math.Max(termContributionToRank, 0);
             }
-            return docRank;
+            return docRank / termsInQuery.Count;
         }
-        private double TitleRank(Dictionary<string, int> termsInQuery, string docNum)
+        private double TitleRank(Dictionary<string, double> termsInQuery, string docNum)
         {
             double queryLength = 0;
             foreach (int freq in termsInQuery.Values)
