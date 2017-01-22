@@ -32,8 +32,10 @@ namespace SearchEngine
         public const string DocumentsDataFileNameWithoutStemming = "DocumentsDataWithoutStemming";
         public const string LanguagesFileNameStemming = "LanguagesStemming";
         public const string LanguagesFileNameWithoutStemming = "LanguagesWithoutStemming";
-        public static HashSet<string> StemmingFiles = new HashSet<string> { MainDictionaryFileNameStemming, DocumentsDataFileNameStemming, LanguagesFileNameStemming };
-        public static HashSet<string> NoStemmingFiles = new HashSet<string> { MainDictionaryFileNameWithoutStemming, DocumentsDataFileNameWithoutStemming, LanguagesFileNameWithoutStemming };
+        public const string StopWordsFileName = "StopWords";
+
+        public static HashSet<string> StemmingFiles = new HashSet<string> { MainDictionaryFileNameStemming, DocumentsDataFileNameStemming, LanguagesFileNameStemming, StopWordsFileName };
+        public static HashSet<string> NoStemmingFiles = new HashSet<string> { MainDictionaryFileNameWithoutStemming, DocumentsDataFileNameWithoutStemming, LanguagesFileNameWithoutStemming, StopWordsFileName };
         public double AvgDocumentLength { get; set; }
 
 
@@ -264,6 +266,11 @@ namespace SearchEngine
             Status = "Saving languages";
             SavePropertyToFile(DocLanguages, fullPath);
 
+            Status = "Saving Stop Words";
+            fullPath = _mainDictionaryFilePath + "\\" + StopWordsFileName;
+            SavePropertyToFile(Parser.StopWords, fullPath);
+
+
 
         }
 
@@ -319,6 +326,12 @@ namespace SearchEngine
                 fullPath = _mainDictionaryFilePath + "\\" + LanguagesFileNameWithoutStemming;
             Status = "Loading languages";
             DocLanguages = (ObservableCollection<string>)LoadProeprtyFromFile(fullPath, out succeed);
+
+            Status = "Loading Stop Words";
+            fullPath = _mainDictionaryFilePath + "\\" + StopWordsFileName;
+            HashSet<string> stopWords = (HashSet<string>)LoadProeprtyFromFile(fullPath, out succeed);
+            Parser.InitStopWords(stopWords);
+
             Status = "Merging main dictionary";
             MergeSplittedDictionaries();
             CalculateAverageDocumenbtLength();

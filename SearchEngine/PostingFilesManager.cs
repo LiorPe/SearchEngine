@@ -13,7 +13,7 @@ namespace SearchEngine
         //Path for directory in which postinf files will be saved.
         string _destPostingFiles;
         int _charValuesRange = 'z' - 'a' + 1;
-        int _charIntervalForPostingFile;
+        static int _charIntervalForPostingFile;
         const int _minCharValue = 'a';
         // Saves what is the last row that was written in each posting file (so you can know what is the next availabe row infile)
         Dictionary<int, int> _lastRowWrittenInFile;
@@ -62,7 +62,7 @@ namespace SearchEngine
             }
         }
 
-        private int MatchPostingFileToTerm(string term)
+        public static int MatchPostingFileToTerm(string term)
         {
             int ans = (int)Math.Ceiling((double)(term[0] - _minCharValue) / (double)(_charIntervalForPostingFile));
             return Math.Max(Math.Min(ans, NumOfPostingFiles - 1), 0);
@@ -172,6 +172,13 @@ namespace SearchEngine
 
         }
 
+        /// <summary>
+        /// Get posting file records of termsin querry
+        /// </summary>
+        /// <param name="termsToExtractFromPostingFiles"> Terms of querry</param>
+        /// <param name="_splittedMainDictionary"> Main dictionary</param>
+        /// <param name="generateAutoCompletion">Do we need to generate auto completion suggestion</param>
+        /// <returns></returns>
         public Dictionary<string, PostingFileRecord> ExtractPostingFileRecords(string[] termsToExtractFromPostingFiles, Dictionary<string, TermData>[] _splittedMainDictionary, bool generateAutoCompletion)
         {
             Dictionary<string, PostingFileRecord> extractedRecordsFromPostingFiles = new Dictionary<string, PostingFileRecord>();
@@ -227,6 +234,11 @@ namespace SearchEngine
             return extractedRecordsFromPostingFiles;
         }
 
+        /// <summary>
+        /// Get full posting file path (maps betweenn hash value of term to its posting file path)
+        /// </summary>
+        /// <param name="i">Hash value of term</param>
+        /// <returns>Full path to posting file</returns>
         public string GetFilePathName(int i)
         {
             string fullPostingFilesPath;

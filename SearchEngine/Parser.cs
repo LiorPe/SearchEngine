@@ -272,6 +272,11 @@ namespace SearchEngine
             StopWords = new HashSet<string>(stopWords);
         }
 
+        public static void InitStopWords(HashSet<string> stopWords)
+        {
+            StopWords = stopWords;
+        }
+
         /// <summary>
         /// Update frequncies of specific term, in regrads to the document it appeared in. 
         /// </summary>
@@ -282,6 +287,8 @@ namespace SearchEngine
         private static void UpdateTermsFrequenciesInCurrentDocument(string term, Dictionary<string,int> termFrequencies)
         {
             // If term wasn`t found previously in document - set its frequency to one
+            if (termFrequencies == null)
+                return;
             if (!termFrequencies.ContainsKey(term))
                 termFrequencies[term] = 1;
             // Otherwise increase it by 1.
@@ -496,6 +503,8 @@ namespace SearchEngine
             // if two token connected by - (word-number,word-word,number-number,number word)
             else if ((splittedToken = token.Split('-')).Length == 2 && splittedToken.All(s => s != String.Empty) && splittedToken.All(s => s != String.Empty) && (splittedToken[0].All(Char.IsLetter) || Double.TryParse(splittedToken[0], out numericValue)) && (splittedToken[1].All(Char.IsLetter) || Double.TryParse(splittedToken[1], out numericValue)))
             {
+                if (useStemming)
+                    StemSubtokens(ref token, splittedToken);
                 countFrequenciesSeperately = true;
                 return false;
             }
@@ -504,6 +513,8 @@ namespace SearchEngine
             // if 3 words connected by - (word-word-word)
             else if ((splittedToken = token.Split('-')).Length == 3 && splittedToken.All(s => s != String.Empty) && splittedToken[0].All(Char.IsLetter) && splittedToken[1].All(Char.IsLetter) && splittedToken[2].All(Char.IsLetter))
             {
+                if (useStemming)
+                    StemSubtokens(ref token, splittedToken);
                 countFrequenciesSeperately = true;
                 return false;
             }
@@ -540,6 +551,8 @@ namespace SearchEngine
                 token = token.Substring(0, endOfToken);
                 if (token.All(Char.IsLetter))
                 {
+                    if (useStemming)
+                        token = ActivateStemming(token);
                     int nextTokenIndex = fileIndexer + 1;
                     string nextToken = String.Empty;
                     while (nextTokenIndex < file.Length && StopWords.Contains(nextToken = NormalizeToken(file[nextTokenIndex])))
@@ -550,6 +563,8 @@ namespace SearchEngine
                         return true;
                     if (nextToken.All(Char.IsLetter) || nextToken.All(Char.IsDigit))
                     {
+                        if (useStemming)
+                            nextToken = ActivateStemming(token);
                         fileIndexer = nextTokenIndex;
                         token = String.Format("{0}-{1}", token, nextToken);
                         countFrequenciesSeperately = true;
@@ -578,6 +593,8 @@ namespace SearchEngine
                         lastCharWasLetter = !lastCharWasLetter;
                     }
                 }
+                if (useStemming)
+                    detachedToken = ActivateStemming(detachedToken);
                 tokens.Add(detachedToken);
                 splittedToken = tokens.ToArray();
                 int recursiveFileIndexer = 0;
@@ -603,6 +620,18 @@ namespace SearchEngine
             }
             SkipUpdatingFrequnciesOfThisTerm = true;
             return false;
+        }
+
+        private static void StemSubtokens(ref string token, string[] splittedToken)
+        {
+            token = String.Empty;
+            for (int i=0; i< splittedToken.Length; i++)
+            {
+                if (i == splittedToken.Length - 1)
+                    token += ActivateStemming(splittedToken[i]);
+                else
+                    token +=String.Format("{0}-",ActivateStemming(splittedToken[i]));
+            }
         }
 
 

@@ -38,7 +38,7 @@
                     <RowDefinition Height="0.1*" MinHeight="20"/>
                 </Grid.RowDefinitions >
                 <Button x:Name="StartBtn" Grid.Column="4" Grid.ColumnSpan="3" Grid.Row="1" Grid.RowSpan="6" Click="Start_Click" MinWidth="70" MinHeight="60" FontSize="26">Index Corpus</Button>
-                <Button x:Name="Reset" Grid.Column="6" Grid.Row="8" Grid.RowSpan="2" Click="Reset_Click" MinWidth="30" MinHeight="30" FontSize="26">RESET</Button>
+                <Button x:Name="Reset" Grid.Column="6" Grid.Row="8" Grid.RowSpan="2" Click="ResetPartA_Click" MinWidth="30" MinHeight="30" FontSize="26">RESET</Button>
                 <Button x:Name="Show" Grid.Column="4" Grid.Row="8" Grid.RowSpan="2" Click="Load_Click" MinWidth="30" MinHeight="30" FontSize="26">LOAD</Button>
                 <Button x:Name="Load" Grid.Column="1" Grid.Row="9" Click="Show_Click" MinWidth="80" MinHeight="20" FontSize="26">Show Dictionary</Button>
                 <Label Grid.Column="1" Grid.Row="6" FontSize="18">Select document language:</Label>
@@ -124,8 +124,8 @@
 
                     </DataGrid.Columns>
                 </DataGrid>
-                <Button Content="Save Results To File" Grid.Row="18" Grid.Column="4" Grid.ColumnSpan="3" Click="SaveResultsToFile_Click"/>
-                <Button Content="Crazy mother fucker test" Grid.Row="18" Grid.Column="8" Grid.ColumnSpan="3" Click="Test_Click"/>
+                <Button Content="Save Results To File" Grid.Row="18" Grid.Column="3" Grid.ColumnSpan="2" Click="SaveResultsToFile_Click"/>
+                <Button Content="Reset" Grid.Row="18" Grid.Column="6" Grid.ColumnSpan="2" Click="ResetPartB_Click"/>
 
             </Grid>
         </TabItem>

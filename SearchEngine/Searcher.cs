@@ -24,17 +24,28 @@ namespace SearchEngine
         }
 
 
-
+        /// <summary>
+        /// Gets completion for user querry
+        /// </summary>
+        /// <param name="userQuery"> querry </param>
+        /// <returns>List of suggenstion to complete querry</returns>
         public List<string> GetCompletionSuggestions(string userQuery)
         {
+            // Extract posting files records of the words] user submitted
             Dictionary<string, PostingFileRecord> postingFileRecord = _postingFilesAPI.ExtractPostingFileRecords(new string[] { userQuery }, _splittedMainDictionary, true);
             List<string> completionSuggestions = new List<string>();
+            // If term exists in posting files - get all its completion suggestions
             if (postingFileRecord.ContainsKey(userQuery))
                 completionSuggestions = postingFileRecord[userQuery].NextTermInAllDocuments.Keys.ToList();
             return completionSuggestions;
 
         }
 
+        /// <summary>
+        /// Get all posting records of terms in querry
+        /// </summary>
+        /// <param name="parsedQuery">Querry after parsing</param>
+        /// <returns>Posting file records of term in querry</returns>
         public Dictionary<string,PostingFileRecord> FindReleventDocuments(Dictionary<string, int> parsedQuery)
         {
             List<PostingFileRecord> releventPostingFilesRecord = new List<PostingFileRecord>();

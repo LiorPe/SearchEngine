@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Xml.Serialization;
 using System.Collections.ObjectModel;
 using System.Xml;
-using System.Linq;
 using GUI.DataGridRecords;
 using SearchEngine.Ranking;
 
@@ -40,7 +39,6 @@ namespace GUI
         Indexer idx;
         bool stemLoadSuccess;
         bool noStemLoadSuccess;
-        bool uploaded = false;
         Searcher searcher;
         Ranker ranker;
         PostingFilesManager _postingFilesAPI;
@@ -49,6 +47,8 @@ namespace GUI
         DocumentRank[] rankedDocument;
         static char[] QuerrySplitters = new char[] { ' ', '\t', '\r' };
         bool searchDone = false;
+        List<string> _savedResultsFiles;
+        bool errMsgAppeared;
 
 
         /// <summary>
@@ -63,14 +63,12 @@ namespace GUI
             stemCheck.IsChecked = false;
             dest = "";
             src = "";
-            destPath.Text = @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\postingFiles";
-            srcPath.Text = @"C:\Users\ליאור\Documents\לימודים\סמסטר ה'\אחזור מידע\מנוע\corpus";
             ResizeMode = ResizeMode.NoResize;
             stemLoadSuccess = false;
             noStemLoadSuccess = false;
-            uploaded = true;
             InitLanguages();
             InitLanguageSelected();
+            _savedResultsFiles = new List<string>();
         }
 
 
@@ -283,14 +281,26 @@ namespace GUI
                 dest = destPath.Text;
                 string target;
                 if (dest == String.Empty || dest == null)
+                {
+                    System.Windows.MessageBox.Show("Destination path cannot be empty.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
+                }
                 if (dest[dest.Length - 1] == '\\')
                     target = dest;
                 else target = dest + '\\';
                 //make sure that the correct dictionary exists in directory
                 if ((stemming && !Indexer.StemmingFiles.All(fileName => (File.Exists(target + fileName)))) || (!stemming && !Indexer.NoStemmingFiles.All(fileName => (File.Exists(target + fileName)))))
+                {
+                    System.Windows.MessageBox.Show("Destination path does not contain neccessary files.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
-                return System.IO.Directory.Exists(dest);
+
+                }
+                if(!System.IO.Directory.Exists(dest))
+                {
+                    System.Windows.MessageBox.Show("Destination path does not exist or not accessible.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+                return true;
             }
             //user wants to create a new dictionary
             else if (type == "start")
@@ -305,8 +315,13 @@ namespace GUI
         /// <summary>
         /// Interaction logic for the RESET button; Empties main memory and calls file deletion function
         /// </summary>
-        private void Reset_Click(object sender, RoutedEventArgs e)
+        private void ResetPartA_Click(object sender, RoutedEventArgs e)
         {
+            if(!stemLoadSuccess && !noStemLoadSuccess)
+            {
+                System.Windows.MessageBox.Show("There is nothing to reset. Please create or load index at first");
+                return;
+            }
             //reset args, empty path textboxes
             stemming = true;
             stemCheck.IsChecked = true;
@@ -318,7 +333,16 @@ namespace GUI
             ranker = null;
             stemLoadSuccess = false;
             noStemLoadSuccess = false;
-            Delete_Files();
+            dest = destPath.Text;
+            try
+            {
+                Delete_Files();
+
+            }
+            catch
+            {
+
+            }
             System.Windows.MessageBox.Show("The IR Engine has been reset.", "IREngine Reset", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -327,7 +351,7 @@ namespace GUI
         /// </summary>
         private void Delete_Files()
         {
-            if (dest != "")
+            if (!String.IsNullOrEmpty(dest) && Directory.Exists(dest))
             {
                 string target;
                 if (dest[dest.Length - 1] == '\\')
@@ -347,6 +371,7 @@ namespace GUI
                     }
                 }
             }
+            System.Windows.MessageBox.Show("Path submitte does not longer exist");
 
         }
 
@@ -357,7 +382,7 @@ namespace GUI
         {
             //Check that there's a dictionary in the main memory
 
-            if (!hasIndex || !stemLoadSuccess || !noStemLoadSuccess)
+            if (!hasIndex && !stemLoadSuccess && !noStemLoadSuccess)
             {
                 System.Windows.MessageBox.Show("Please start the indexing or load a dictionary first.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -380,7 +405,6 @@ namespace GUI
                 stemming = false;
             if (!IsVaild_dest("load"))
             {
-                System.Windows.MessageBox.Show("Please input valid path.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             dest = destPath.Text;
@@ -427,11 +451,14 @@ namespace GUI
             if (stemming)
             {
                 stemLoadSuccess = idx.LoadMainDictionaryFromMemory(stemming);
+                stemLoadSuccess = true;
                 noStemLoadSuccess = false;
             }
             else
             {
                 stemLoadSuccess = false;
+                noStemLoadSuccess = true;
+
                 noStemLoadSuccess = idx.LoadMainDictionaryFromMemory(stemming);
             }
         }
@@ -505,7 +532,7 @@ namespace GUI
             dst_path = fbd.SelectedPath;
         }
 
-
+        #region PART B 
         private void SubmittingQuery_Click(object sender, SelectionChangedEventArgs e)
         {
             if ((bool)stemCheck.IsChecked)
@@ -516,7 +543,7 @@ namespace GUI
             if (mainTabControl.SelectedIndex == 1 && ((stemming && !stemLoadSuccess) || (!stemming && !noStemLoadSuccess)))
             {
                 System.Windows.MessageBox.Show("Please start the indexing or load a dictionary first.", "Path Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                // mainTabControl.SelectedIndex = 0;
+                mainTabControl.SelectedIndex = 0;
             }
         }
 
@@ -566,34 +593,60 @@ namespace GUI
             if (String.IsNullOrWhiteSpace(txtbxUserQuery.Text) && String.IsNullOrWhiteSpace(txtbxFileQuery.Text))
             {
                 System.Windows.MessageBox.Show("Please submit or upload a query");
+                return;
             }
-            if (!String.IsNullOrWhiteSpace(txtbxUserQuery.Text) && !String.IsNullOrWhiteSpace(txtbxFileQuery.Text))
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += SearchAllQuerries;
+            worker.RunWorkerCompleted += CloseProgressWindow;
+            worker.RunWorkerAsync();
+            IndeterminateProgressWindow pWin = new IndeterminateProgressWindow(ref idx);
+            pWin.ShowDialog();
+            //protection from permature killing of the progress window
+            if (pWin.DialogResult != true)
             {
-                System.Windows.MessageBox.Show("Can`t search submitted query and fule query on the same time");
+                return;
             }
-            rankedDocument = new DocumentRank[0];
-            string stopwords;
-            src = srcPath.Text;
-            if (src[src.Length - 1] == '\\')
-                stopwords = src + "stop_words.txt";
-            else stopwords = src + "\\stop_words.txt";
-            Parser.InitStopWords(stopwords);
-            if (!String.IsNullOrWhiteSpace(txtbxUserQuery.Text))
-            {
-                SearchQuery(txtbxUserQuery.Text.Split(QuerrySplitters), "295");
-            }
-            if (!String.IsNullOrWhiteSpace(txtbxFileQuery.Text))
-            {
-                SearchFileQuery();
-            }
-            dataGridResults.ItemsSource = new ObservableCollection<DocumentRank>(rankedDocument);
-            searchDone = true;
+
 
         }
 
-        private void SearchFileQuery()
+        private void CloseProgressWindow(object sender, RunWorkerCompletedEventArgs e)
         {
-            string fileQueryPath = txtbxFileQuery.Text;
+            idx.Status = "Done";
+        }
+
+        private void SearchAllQuerries(object sender, DoWorkEventArgs e)
+        {
+            errMsgAppeared = false;
+            string userQuery=String.Empty;
+            string fileQuery = String.Empty; ;
+            this.Dispatcher.Invoke(() =>
+            {
+                userQuery = txtbxUserQuery.Text;
+                fileQuery = txtbxFileQuery.Text;
+            });
+            rankedDocument = new DocumentRank[0];
+            if (!String.IsNullOrWhiteSpace(userQuery))
+            {
+                SearchQuery(userQuery.Split(QuerrySplitters), "295", userQuery);
+            }
+            if (!String.IsNullOrWhiteSpace(fileQuery))
+            {
+                SearchFileQuery(fileQuery);
+            }
+            this.Dispatcher.Invoke(() =>
+            {
+                dataGridResults.ItemsSource = new ObservableCollection<DocumentRank>(rankedDocument);
+            });
+            searchDone = true;
+            if (rankedDocument.Count() == 0)
+                System.Windows.MessageBox.Show("No results were found");
+
+        }
+
+        private void SearchFileQuery(string fileQueryPath)
+        {
             if (!File.Exists(fileQueryPath))
             {
                 System.Windows.MessageBox.Show("File chosen does not exist");
@@ -615,20 +668,34 @@ namespace GUI
                 string[] splittedQuery = query.Split(QuerrySplitters);
                 string queryId = splittedQuery[0];
                 splittedQuery[0] = String.Empty;
-                SearchQuery(splittedQuery, queryId);
+                SearchQuery(splittedQuery, queryId, query);
 
             }
         }
 
-        private void SearchQuery(string[] query, string queryID)
+        private void SearchQuery(string[] query, string queryID , string originalQuery)
         {
-            Dictionary<string, int> termsInQuery = idx.ParseQuery(query, stemming);
-            Dictionary<string, double> termsInQueryToDouble = new Dictionary<string, double>();
-            foreach (string term in termsInQuery.Keys)
-                termsInQueryToDouble[term] = termsInQuery[term];
-            Dictionary<string, PostingFileRecord> releventDocuments = searcher.FindReleventDocuments(termsInQuery);
-            HashSet<string> chosenLanguages = ExtractChosenLanguages();
-            rankedDocument = ranker.RankDocuments(termsInQueryToDouble, queryID, releventDocuments, rankedDocument, idx.AvgDocumentLength, chosenLanguages);
+            try
+            {
+                idx.Status = String.Format("Proccessing querry: {0}", originalQuery);
+                Dictionary<string, int> termsInQuery = idx.ParseQuery(query, stemming);
+                Dictionary<string, double> termsInQueryToDouble = new Dictionary<string, double>();
+                foreach (string term in termsInQuery.Keys)
+                    termsInQueryToDouble[term] = termsInQuery[term];
+                Dictionary<string, PostingFileRecord> releventDocuments = searcher.FindReleventDocuments(termsInQuery);
+                HashSet<string> chosenLanguages = ExtractChosenLanguages();
+                rankedDocument = ranker.RankDocuments(termsInQueryToDouble, queryID, releventDocuments, rankedDocument, idx.AvgDocumentLength, chosenLanguages);
+
+            }
+            catch
+            {
+                if(!errMsgAppeared)
+                {
+                    System.Windows.MessageBox.Show("Some of the querries were not in the right format and could not be searched.");
+                    errMsgAppeared = true;
+                }
+
+            }
         }
 
         private HashSet<string> ExtractChosenLanguages()
@@ -667,11 +734,21 @@ namespace GUI
                 {
                     queriesRecords[i] = rankedDocument[i].ToString();
                 }
-                File.WriteAllLines(win.FileName, queriesRecords);
+                try
+                {
+                    File.WriteAllLines(win.FileName, queriesRecords);
+
+                }
+                catch
+                {
+                    System.Windows.MessageBox.Show("File could not be saved.");
+                }
+                _savedResultsFiles.Add(win.FileName);
             }
 
         }
 
+        #region Trecval Test
         private void Test_Click(object sender, RoutedEventArgs e)
         {
             if (String.IsNullOrWhiteSpace(txtbxUserQuery.Text) && String.IsNullOrWhiteSpace(txtbxFileQuery.Text))
@@ -703,15 +780,8 @@ namespace GUI
 
 
 
-
-            Test(1.8, 0.5, 0.2, 0.65, 1.1);// best
-
-
-
-
-
-
-
+            for(double w5 = 0.3; w5<=0.8; w5+=0.2)
+                Test(w5);// best 
 
             System.Windows.MessageBox.Show("Test is done");
             return;
@@ -720,27 +790,20 @@ namespace GUI
 
         public void Test(params double[] parameters)
         {
-            ranker.w1 = parameters[0];
-            ranker.w2 = parameters[1];
-            ranker.w3 = parameters[2];
-            ranker.w4 = parameters[3];
-
-            ranker.wSemantics = parameters[4];
-
             //for (double w2 = 0; w2 <= 0; w2 += 0)
             //{
 
 
             //ranker.w2 = w2;
             rankedDocument = new DocumentRank[0];
-            SearchFileQuery();
+            SearchFileQuery(txtbxFileQuery.Text);
             int resultsCount = rankedDocument.Length;
             string[] queriesRecords = new string[resultsCount];
             for (int i = 0; i < resultsCount; i++)
             {
                 queriesRecords[i] = rankedDocument[i].ToString();
             }
-            string fileName = String.Format("results_w1_{0}_w2_{1}_w3_{2}_w4_{3}_wSemantics_{4}.txt", ranker.w1, ranker.w2, ranker.w3 , ranker.w4, ranker.wSemantics);
+            string fileName = String.Format("results_w5_{0}.txt");
             string filePath = String.Format(@"C:\IR\{0}", fileName);
             File.WriteAllLines(filePath, queriesRecords);
 
@@ -763,6 +826,33 @@ namespace GUI
                 }
             }
         }
+        #endregion
+        private void ResetPartB_Click(object sender, RoutedEventArgs e)
+        {
+
+            txtbxFileQuery.Text = String.Empty;
+            txtbxUserQuery.Text = String.Empty;
+            rankedDocument = new DocumentRank[0];
+            dataGridResults.ItemsSource = new ObservableCollection<DocumentRank>();
+            InitLanguageSelected();
+
+            // delete all saved files
+            foreach (string savedResultFile in _savedResultsFiles)
+            {
+                if (File.Exists(savedResultFile))
+                    File.Delete(savedResultFile);
+            }
+            _savedResultsFiles = new List<string>();
+            if (!searchDone)
+            {
+                System.Windows.MessageBox.Show("There is files to delete. You must aubmit a new querry first.");
+                return;
+            }
+            System.Windows.MessageBox.Show("Results were resetted successfully!");
+            searchDone = false;
+
+        }
+        #endregion
     }
 
 }

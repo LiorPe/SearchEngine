@@ -25,17 +25,28 @@ namespace SearchEngine.Ranking
         public double wSemantics = 1.1;
 
 
+        // Dcouments data
         Dictionary<string, DocumentData> _documents;
+
         Dictionary<string, TermData>[] _splittedMainDictionary;
         int resultsToRetrieve = 50;
         WordNetEngine _similarityEngine;
         Searcher _searcher;
         Stemmer _stemmer;
         bool _useStemming;
+        // Memory of retreived posting files records from memory
         static Dictionary<string, PostingFileRecord> _postingFileRecordsInMemory;
 
+        /// <summary>
+        /// C`tor of ranker
+        /// </summary>
+        /// <param name="documents"> Data about documents in corpus</param>
+        /// <param name="splittedMainDictionary"> Main dictionary from indexer</param>
+        /// <param name="searcher">Searcher </param>
+        /// <param name="useStemming"> Is use stemming </param>
         public Ranker(Dictionary<string, DocumentData> documents, Dictionary<string, TermData>[] splittedMainDictionary, Searcher searcher, bool useStemming)
         {
+
             _documents = documents;
             _splittedMainDictionary = splittedMainDictionary;
             string root = Path.GetDirectoryName(Application.ExecutablePath);
@@ -47,6 +58,16 @@ namespace SearchEngine.Ranking
                 _postingFileRecordsInMemory = new Dictionary<string, PostingFileRecord>();
         }
 
+        /// <summary>
+        /// Rank documents
+        /// </summary>
+        /// <param name="termsInQuery">Term of query and their frquency</param>
+        /// <param name="queryID"> Query ID</param>
+        /// <param name="releventPostingFilesRecords"> Posting files from searcher of terms from query</param>
+        /// <param name="previousRankedDocuments"> Documents ranked from previous querries </param>
+        /// <param name="avgDocumentLength"> Average document length of all documents in corpus </param>
+        /// <param name="chosenLanguages"> Languages user selected from query</param>
+        /// <returns> Rankinng of doucments</returns>
         public DocumentRank[] RankDocuments(Dictionary<string, double> termsInQuery, string queryID, Dictionary<string, PostingFileRecord> releventPostingFilesRecords,
             DocumentRank[] previousRankedDocuments, double avgDocumentLength, HashSet<string> chosenLanguages)
         {
@@ -61,23 +82,28 @@ namespace SearchEngine.Ranking
             // Check if can find relevent documents fo query
             double R = 0;
 
+            // Rank all documents
             foreach (string docNum in releventDocuments)
             {
                 documentRanking[docNum] = BM25(termsInQuery, docNum, releventPostingFilesRecords, R, avgDocumentLength, N);
                 documentRanking[docNum] += w1 * TitleRank(termsInQuery, docNum);
                 documentRanking[docNum] += w3 * AddAdjacentTermsScore(termsInQuery, docNum, releventPostingFilesRecords);
                 documentRanking[docNum] += w4 * SpecificityOfDocument(termsInQuery, docNum, releventPostingFilesRecords);
-
-            }
+             }
+            // Add score for semantic care
             UpdateRankWithSemantics(termsInQuery, ref documentRanking, chosenLanguages, R, avgDocumentLength, N);
             int rankIndexer = 0;
+
+            // Sort ranking by descending order
             var sortedRank = documentRanking.OrderByDescending(i => i.Value);
             int numOfResults = Math.Min(resultsToRetrieve, sortedRank.Count());
             List<DocumentRank> sortedRankedDocuments = new List<DocumentRank>();
+            // copy results from previous querries
             for (int i = 0; i < previousRankedDocuments.Length; i++, rankIndexer++)
             {
                 sortedRankedDocuments.Add(previousRankedDocuments[i]);
             }
+            // Add results from current querry
             for (int i = 1; i <= numOfResults; i++, rankIndexer++)
             {
                 var rankedResut = sortedRank.ElementAt(i - 1);
@@ -90,11 +116,20 @@ namespace SearchEngine.Ranking
 
         }
 
+        /// <summary>
+        /// Ranking based on how many terms from the querry exist in document 
+        /// </summary>
+        /// <param name="termsInQuery">Querry </param>
+        /// <param name="docNum">Document number </param>
+        /// <param name="releventPostingFilesRecords">Posting files record of terms in querry.</param>
+        /// <returns>Score </returns>
         private double SpecificityOfDocument(Dictionary<string, double> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords)
         {
             double termsAppearInDoc = 0;
             foreach (string term in termsInQuery.Keys)
             {
+                if (!releventPostingFilesRecords.ContainsKey(term))
+                    continue;
                 PostingFileRecord postingFileOfTerm = releventPostingFilesRecords[term];
                 if (!postingFileOfTerm.DF.ContainsKey(docNum))
                     continue;
@@ -105,9 +140,17 @@ namespace SearchEngine.Ranking
 
         }
 
+        /// <summary>
+        /// Score based on how many terms from query are following each other in document
+        /// </summary>
+        /// <param name="termsInQuery">Querry </param>
+        /// <param name="docNum">Document number </param>
+        /// <param name="releventPostingFilesRecords">Posting files record of terms in querry.</param>
+        /// <returns> Score</returns>
         private double AddAdjacentTermsScore(Dictionary<string, double> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords)
         {
             double score = 0;
+            // for each term in querry
             foreach (string term in termsInQuery.Keys)
             {
                 double termScore = 0;
@@ -117,24 +160,37 @@ namespace SearchEngine.Ranking
                 if (!postingFileOfTerm.NextTermFrequencies.ContainsKey(docNum))
                     continue;
                 Dictionary<string, int> nextTermsInDocument = postingFileOfTerm.NextTermFrequencies[docNum];
+                // and other terms in querry
                 foreach (string nextTerm in termsInQuery.Keys)
                 {
+                    // if two terms are following each other in document - add to score number of times it happens
                     if (nextTerm != term && nextTermsInDocument.ContainsKey(nextTerm))
                         termScore += nextTermsInDocument[nextTerm];
 
                 }
+                // Normalize by frequency of term
                 score += termScore / postingFileOfTerm.DF[docNum];
 
             }
+
             return score;
         }
-
+        /// <summary>
+        /// Add score to querry based on their semantic
+        /// </summary>
+        /// <param name="termsInQuery">Query without syns</param>
+        /// <param name="documentRanking">document ranking withous semantic score</param>
+        /// <param name="chosenLanguages">Languages to retreive documents of</param>
+        /// <param name="R"> R (BM25) </param>
+        /// <param name="avgDocumentLength"> Average document length of all corpus </param>
+        /// <param name="N"> N (BM 25) </param>
         private void UpdateRankWithSemantics(Dictionary<string, double> termsInQuery, ref Dictionary<string, double> documentRanking, HashSet<string> chosenLanguages, double R, double avgDocumentLength, double N)
         {
             Dictionary<string, double> queryWithSemantics = GetQueryCombindedWithSemantics(termsInQuery);
             Dictionary<string, double> documentRankingForExpandedQuery = new Dictionary<string, double>();
             Dictionary<string, PostingFileRecord> releventPostingFilesRecordsExpandedQuery = new Dictionary<string, PostingFileRecord>();
             Dictionary<string, int> termsToRetreiveFromMemory = new Dictionary<string, int>();
+            // Check for every term if its posting file record is stored in memory
             foreach (string term in queryWithSemantics.Keys)
             {
                 if (_postingFileRecordsInMemory.ContainsKey(term))
@@ -142,13 +198,16 @@ namespace SearchEngine.Ranking
                 else
                     termsToRetreiveFromMemory[term] = 0;
             }
+            // Retreive posting file reacords for each term which are not stored in memory 
             Dictionary<string, PostingFileRecord> retreivedPostinfFilesRecord = _searcher.FindReleventDocuments(termsToRetreiveFromMemory);
+            // Add to memory new posting files record
             foreach (string retreivedTerm in retreivedPostinfFilesRecord.Keys)
             {
                 _postingFileRecordsInMemory[retreivedTerm] = retreivedPostinfFilesRecord[retreivedTerm];
                 releventPostingFilesRecordsExpandedQuery[retreivedTerm] = retreivedPostinfFilesRecord[retreivedTerm];
             }
             List<string> termsToRemove = new List<string>();
+            // If syn does not have a posting file record - delete it from query
             foreach (string term in queryWithSemantics.Keys)
             {
                 if (!releventPostingFilesRecordsExpandedQuery.ContainsKey(term))
@@ -157,7 +216,10 @@ namespace SearchEngine.Ranking
             foreach (string term in termsToRemove)
                 queryWithSemantics.Remove(term);
 
+            // Get relevent documents consist terms of expanded query
             HashSet<string> releventDocumentsForExpandedQuery = GetReleventDocument(releventPostingFilesRecordsExpandedQuery, false, chosenLanguages);
+
+            // Calculate rank for expanded query (aside from previous score)
             foreach (string docNum in releventDocumentsForExpandedQuery)
             {
                 if (!documentRankingForExpandedQuery.ContainsKey(docNum))
@@ -166,7 +228,9 @@ namespace SearchEngine.Ranking
                 documentRankingForExpandedQuery[docNum] += w1 * TitleRank(queryWithSemantics, docNum);
                 documentRankingForExpandedQuery[docNum] += w3 * AddAdjacentTermsScore(queryWithSemantics, docNum, releventPostingFilesRecordsExpandedQuery);
                 documentRankingForExpandedQuery[docNum] += w4 * SpecificityOfDocument(queryWithSemantics, docNum, releventPostingFilesRecordsExpandedQuery);
+                //documentRankingForExpandedQuery[docNum] += w5 * RealtiveFrequency(queryWithSemantics, docNum, releventPostingFilesRecordsExpandedQuery);
             }
+            // Add semantic score to total score
             foreach (string docNum in documentRankingForExpandedQuery.Keys)
             {
                 if (!documentRanking.ContainsKey(docNum))
@@ -176,6 +240,13 @@ namespace SearchEngine.Ranking
 
         }
 
+
+
+        /// <summary>
+        /// Returns expanded querry with syns
+        /// </summary>
+        /// <param name="termsInQuery">Querey to expand</param>
+        /// <returns> Querry with origina terms and all their syns</returns>
         private Dictionary<string, double> GetQueryCombindedWithSemantics(Dictionary<string, double> termsInQuery)
         {
             string termToAdd;
@@ -188,7 +259,7 @@ namespace SearchEngine.Ranking
                 {
                     foreach (string syn in synSet.Words)
                     {
-
+                        // if syns consists of two wors
                         if (syn.Contains("_"))
                         {
                             string[] splittedTerm = syn.Split('_');
@@ -205,7 +276,7 @@ namespace SearchEngine.Ranking
                             }
                             queryCombindedWithSemantics[syn.Replace('_', '-')] = termsInQuery[term] / wSemantics;
                         }
-
+                        // if syn consists of one word
                         else
                         {
                             if (_useStemming)
@@ -226,6 +297,11 @@ namespace SearchEngine.Ranking
             return queryCombindedWithSemantics;
         }
 
+        /// <summary>
+        /// Copy synset object to list of strings
+        /// </summary>
+        /// <param name="synSet">Synset </param>
+        /// <returns> list of string of all syns</returns>
         private List<string> CopySynsFromSynset(SynSet synSet)
         {
             List<string> allSynsInSynset = new List<string>();
@@ -234,10 +310,18 @@ namespace SearchEngine.Ranking
             return allSynsInSynset;
         }
 
-
+        /// <summary>
+        /// Extract all documents contains terms from query and written in one of the selected languages
+        /// </summary>
+        /// <param name="releventPostingFilesRecords">Posting file records of term in querry</param>
+        /// <param name="considerLanguages">Did user select languages of documents</param>
+        /// <param name="chosenLanguages"> The languages user selecetd</param>
+        /// <returns></returns>
         private HashSet<string> GetReleventDocument(Dictionary<string, PostingFileRecord> releventPostingFilesRecords, bool considerLanguages, HashSet<string> chosenLanguages)
         {
             HashSet<string> releventDocuments = new HashSet<string>();
+            if (releventPostingFilesRecords == null || releventPostingFilesRecords.Count == 0)
+                return releventDocuments;
             foreach (PostingFileRecord record in releventPostingFilesRecords.Values)
             {
                 foreach (string document in record.DF.Keys)
@@ -249,7 +333,16 @@ namespace SearchEngine.Ranking
             return releventDocuments;
         }
 
-
+        /// <summary>
+        /// BM25
+        /// </summary>
+        /// <param name="termsInQuery">Queery </param>
+        /// <param name="docNum">Document numbers</param>
+        /// <param name="releventPostingFilesRecords">Posting files record</param>
+        /// <param name="R">R (BM25)</param>
+        /// <param name="avgDocumentLength"> Avergage document length </param>
+        /// <param name="N"> number of documents in corpus</param>
+        /// <returns></returns>
         private double BM25(Dictionary<string, double> termsInQuery, string docNum, Dictionary<string, PostingFileRecord> releventPostingFilesRecords, double R, double avgDocumentLength, double N)
         {
             double documentLength = _documents[docNum].DocumentLength;
@@ -282,6 +375,12 @@ namespace SearchEngine.Ranking
             }
             return docRank / termsInQuery.Count;
         }
+        /// <summary>
+        /// Score based on same terms in query and document`s title
+        /// </summary>
+        /// <param name="termsInQuery">Querry </param>
+        /// <param name="docNum"> Document number s</param>
+        /// <returns> Score </returns>
         private double TitleRank(Dictionary<string, double> termsInQuery, string docNum)
         {
             double queryLength = 0;
